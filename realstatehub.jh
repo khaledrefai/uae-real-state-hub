@@ -1,0 +1,213 @@
+enum Currency { AED, USD, EUR }
+enum ListingType { SALE, RENT, OFF_PLAN }
+enum PropertyStatus { Presale, Available, Sold, Rented, Withdrawn, Draft }
+enum MediaKind { COVER, ARCHITECTURE, INTERIOR, LOBBY, MASTER_PLAN, TYPICAL_UNIT, DOCUMENT }
+enum LeadStatus { NEW, CONTACTED, QUALIFIED, WON, LOST }
+
+/* AGENTS & SITES — independent from properties */
+entity AgentProfile {
+  externalUserId String required unique  // Supabase UID
+  fullName       String required
+  companyName    String required
+  email          String required
+  phone          String
+  whatsapp       String
+  country        String
+  city           String
+  website        String
+  active         Boolean required
+}
+
+entity AgentSite {
+  slug            String required unique minlength(3) // branding URL key
+  displayName     String required
+  theme           String required
+  primaryColor    String
+  secondaryColor  String
+  logoUrl         String        // Supabase public URL
+  contactEmail    String required
+  contactPhone    String
+  contactWhatsapp String
+  domain          String        // optional custom domain
+  isActive        Boolean required
+}
+
+entity SubscriptionPlan {
+  code                 String required unique
+  name                 String required
+  priceMonthly         BigDecimal required
+  priceYearly          BigDecimal
+  currency             Currency required
+  stripePriceMonthlyId String
+  stripePriceYearlyId  String
+  maxListings          Integer required  // optional soft cap (can ignore)
+  features             TextBlob
+}
+
+entity Subscription {
+  status               String required
+  startDate            Instant required
+  endDate              Instant
+  stripeCustomerId     String
+  stripeSubscriptionId String
+  cancelAtPeriodEnd    Boolean
+  isActive             Boolean required
+}
+
+/* PROPERTIES — centralized catalog (from 3rd-party) */
+entity Property {
+  extId                Long required unique
+  slug                 String
+  name                 String required
+  developer            String
+  area                 String
+  city                 String
+  country              String
+  listingType          ListingType
+  status               PropertyStatus
+  saleStatus           String
+  readiness            String
+  serviceCharge        String
+  furnishing           String
+  hasEscrow            Boolean
+  postHandover         Boolean
+  completionDateTime   Instant
+  minPrice             BigDecimal
+  maxPrice             BigDecimal
+  minPriceAed          BigDecimal
+  priceCurrency        String
+  minArea              Double
+  maxArea              Double
+  areaUnit             String
+  latitude             Double
+  longitude            Double
+  coverUrl             String
+  coverJson            TextBlob
+  videoUrl             String
+  brochureUrl          String
+  layoutsPdfUrl        String
+  website              String
+  overviewMd           TextBlob
+  raw                  TextBlob
+  publishedAt          Instant
+  updatedAt            Instant
+}
+
+entity PropertyMarker {
+  extId         Long required unique
+  area          String
+  completionDate LocalDate
+  latitude      Double required
+  longitude     Double required
+  name          String required
+  developer     String
+  status        String
+  saleStatus    String
+  minPrice      BigDecimal
+  coverUrl      String
+  coverJson     TextBlob
+}
+
+entity MediaAsset {
+  kind       MediaKind required
+  url        String required
+  mimeType   String
+  width      Integer
+  height     Integer
+  size       Long
+  source     String
+  title      String
+  altText    String
+  sortOrder  Integer
+}
+
+entity Facility {
+  name     String required
+  source   String
+  imageUrl String
+}
+
+entity MapPoint {
+  name       String required
+  distanceKm Double
+}
+
+entity PaymentPlan {
+  name                String required
+  monthsAfterHandover Integer required
+}
+
+entity PaymentPlanItem {
+  orderNo          Integer required
+  paymentTime      String required
+  percentOfPayment String required
+}
+
+entity UnitAvailability {
+  buildingName   String required
+  areaFrom       Double
+  areaUnit       String
+  bedroomType    String
+  lastUpdated    Instant
+  priceCurrency  String
+  priceFrom      BigDecimal
+  priceTo        BigDecimal
+  unitsAvailable Integer
+}
+
+entity UnitBlock {
+  normalizedType  String
+  unitType        String
+  bedroomsAmount  String
+  unitBedrooms    String
+  areaUnit        String
+  unitsAmount     Integer
+  unitsAreaFrom   Double
+  unitsAreaTo     Double
+  unitsAreaFromM2 String
+  unitsAreaToM2   String
+  unitsPriceFrom  BigDecimal
+  unitsPriceTo    BigDecimal
+  priceCurrency   String
+  typicalImageUrl String
+}
+
+/* LEADS — belong to the agent’s site, optionally reference a property */
+entity ContactLead {
+  name      String required
+  email     String
+  phone     String
+  whatsapp  String
+  message   String
+  source    String
+  utm       TextBlob
+  createdAt Instant required
+  status    LeadStatus required
+}
+
+/* RELATIONSHIPS — no site↔property links */
+relationship OneToMany {
+  AgentProfile{sites}        to AgentSite{owner(required)},
+  AgentSite{subscriptions}   to Subscription{site(required)},
+  SubscriptionPlan{sites}    to AgentSite{plan(required)},
+
+  Property{media}            to MediaAsset{property(required)},
+  Property{facilities}       to Facility{property(required)},
+  Property{mapPoints}        to MapPoint{property(required)},
+  Property{paymentPlans}     to PaymentPlan{property(required)},
+  PaymentPlan{items}         to PaymentPlanItem{plan(required)},
+  Property{unitAvailabilities} to UnitAvailability{property(required)},
+  Property{unitBlocks}       to UnitBlock{property(required)},
+
+  AgentSite{leads}           to ContactLead{site(required)},
+  Property{leads}            to ContactLead{property}
+}
+
+relationship OneToOne {
+  PropertyMarker{property(extId)} to Property{marker}
+}
+
+paginate * with pagination
+dto * with mapstruct
+service all with serviceClass
+filter *
