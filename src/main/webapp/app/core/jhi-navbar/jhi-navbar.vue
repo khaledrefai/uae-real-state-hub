@@ -69,6 +69,15 @@
             <font-awesome-icon icon="tasks" />
             <span v-text="t$('global.menu.admin.logs')"></span>
           </b-dropdown-item>
+          <b-dropdown-item to="/admin/import" active-class="active">
+            <font-awesome-icon icon="cloud-upload-alt" />
+            <span v-text="t$('global.menu.admin.import')"></span>
+          </b-dropdown-item>
+          <b-dropdown-divider></b-dropdown-divider>
+          <b-dropdown-item button class="d-flex align-items-center" :disabled="reelyImporting" @click="triggerReelyImport">
+            <font-awesome-icon icon="sync" class="mr-2" :spin="reelyImporting" />
+            <span>{{ reelyImporting ? t$('global.menu.admin.reelySyncInProgress') : t$('global.menu.admin.reelySync') }}</span>
+          </b-dropdown-item>
           <b-dropdown-item v-if="openAPIEnabled" to="/admin/docs" active-class="active">
             <font-awesome-icon icon="book" />
             <span v-text="t$('global.menu.admin.apidocs')"></span>

@@ -3,22 +3,15 @@
 #
 # This configuration is used for unit/integration tests.
 #
-# More information on profiles: https://www.jhipster.tech/profiles/
-# More information on configuration properties: https://www.jhipster.tech/common-application-properties/
-# ===================================================================
-
-# ===================================================================
-# Standard Spring Boot properties.
-# Full reference is available at:
-# http://docs.spring.io/spring-boot/docs/current/reference/html/common-application-properties.html
 # ===================================================================
 
 spring:
   application:
     name: uaeRealStateHub
-  # Replace by 'prod, faker' to add the faker context and have sample data loaded in production
-  liquibase:
-    contexts: test
+  data:
+    mongodb:
+      uri: ${SPRING_DATA_MONGODB_URI:mongodb://127.0.0.1:27017/propertieshub-test}
+      auto-index-creation: true
   jackson:
     serialization:
       write-durations-as-timestamps: false
@@ -52,11 +45,6 @@ server:
   port: 10344
   address: localhost
 
-# ===================================================================
-# JHipster specific properties
-#
-# Full reference is available at: https://www.jhipster.tech/common-application-properties/
-# ===================================================================
 jhipster:
   clientApp:
     name: 'uaeRealStateHubApp'
@@ -64,7 +52,6 @@ jhipster:
     from: uaeRealStateHub@localhost.com
     base-url: http://127.0.0.1:8080
   logging:
-    # To test json console appender
     use-json-format: false
     logstash:
       enabled: false
@@ -74,22 +61,10 @@ jhipster:
   security:
     authentication:
       jwt:
-        # This token must be encoded using Base64 (you can type `echo 'secret-key'|base64` on your command line)
         base64-secret: OTg5MzRmYWMyMmVhNTZlY2RlMzc2OGIyMGZlYTQ0MTZhZjA0MjcwMmJhNDE5YjQzMjZjNjc5MDllZWNkMmJlMzY1NGVjNjZmN2ZmZDRmY2U5ZTFiNjg5ZGIyN2Y5YjliOTcwMzEyZGQxZWZjZDhmMzg3NWQzZTlkM2EzNDI2YjA=
-        # Token is valid 24 hours
         token-validity-in-seconds: 86400
         token-validity-in-seconds-for-remember-me: 86400
 
-# ===================================================================
-# Application specific properties
-# Add your own application properties here, see the ApplicationProperties class
-# to have type-safe configuration, like in the JHipsterProperties above
-#
-# More documentation is available at:
-# https://www.jhipster.tech/common-application-properties/
-# ===================================================================
-
-# application:
 management:
   health:
     mail:

@@ -1,0 +1,36 @@
+{
+  "uaeRealStateHubApp": {
+    "agentSite": {
+      "home": {
+        "title": "Agent Sites",
+        "refreshListLabel": "Refresh list",
+        "createLabel": "Create a new Agent Site",
+        "createOrEditLabel": "Create or edit a Agent Site",
+        "notFound": "No Agent Sites found"
+      },
+      "created": "A new Agent Site is created with identifier { param }",
+      "updated": "A Agent Site is updated with identifier { param }",
+      "deleted": "A Agent Site is deleted with identifier { param }",
+      "delete": {
+        "question": "Are you sure you want to delete Agent Site { id }?"
+      },
+      "detail": {
+        "title": "Agent Site"
+      },
+      "id": "ID",
+      "slug": "Slug",
+      "displayName": "Display Name",
+      "theme": "Theme",
+      "primaryColor": "Primary Color",
+      "secondaryColor": "Secondary Color",
+      "logoUrl": "Logo Url",
+      "contactEmail": "Contact Email",
+      "contactPhone": "Contact Phone",
+      "contactWhatsapp": "Contact Whatsapp",
+      "domain": "Domain",
+      "isActive": "Is Active",
+      "owner": "Owner",
+      "plan": "Plan"
+    }
+  }
+}

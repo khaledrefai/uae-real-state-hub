@@ -1,0 +1,57 @@
+{
+  "annotations": {
+    "changelogDate": "20251006123718"
+  },
+  "applications": "*",
+  "dto": "mapstruct",
+  "fields": [
+    {
+      "fieldName": "code",
+      "fieldType": "String",
+      "fieldValidateRules": ["required", "unique"]
+    },
+    {
+      "fieldName": "name",
+      "fieldType": "String",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "priceMonthly",
+      "fieldType": "BigDecimal",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "priceYearly",
+      "fieldType": "BigDecimal"
+    },
+    {
+      "fieldName": "currency",
+      "fieldType": "Currency",
+      "fieldValidateRules": ["required"],
+      "fieldValues": "AED,USD,EUR"
+    },
+    {
+      "fieldName": "stripePriceMonthlyId",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "stripePriceYearlyId",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "maxListings",
+      "fieldType": "Integer",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "features",
+      "fieldType": "TextBlob"
+    }
+  ],
+  "jpaMetamodelFiltering": true,
+  "name": "SubscriptionPlan",
+  "pagination": "pagination",
+  "relationships": [],
+  "searchEngine": "no",
+  "service": "serviceClass"
+}

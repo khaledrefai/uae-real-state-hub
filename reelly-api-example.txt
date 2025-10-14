@@ -1,0 +1,1110 @@
+Get list of properties : 
+url : https://search-listings-production.up.railway.app/v1/properties
+request : 
+Query Params
+page
+integer
+Defaults to 1
+Page number
+
+per_page
+integer
+Defaults to 12
+Items per page (max 50)
+
+Responses
+
+200
+List of properties successfully retrieved
+
+Response body
+object
+items
+array of objects
+object
+id
+integer
+name
+string
+developer
+string
+area
+string
+status
+string
+is_partner_project
+boolean
+cover_image_url
+string
+post_handover
+boolean
+sale_status
+string
+completion_datetime
+date-time
+has_escrow
+boolean
+coordinates
+string
+min_price_aed
+number
+min_price
+number
+min_price_per_area_unit
+number
+max_price
+number
+price_currency
+string
+area_unit
+string
+pagination
+object
+page
+integer
+per_page
+integer
+total
+integer
+pages
+integer
+has_next
+boolean
+has_prev
+boolean
+example :
+{
+    "items": [
+        {
+            "area": "Masdar City, Abu Dhabi",
+            "area_unit": "sqft",
+            "completion_datetime": "2029-06-30T00:00:00",
+            "coordinates": "24.43099508520978, 54.61504008936104",
+            "cover_image_url": "{\"access\": \"public\", \"path\": \"/vault/ZZLvFZFt/H7zye3hEanlmxHLrUHaErCXGA-8/JrCuXA../10.jpg\", \"name\": \"10.jpg\", \"type\": \"image\", \"size\": 388264, \"mime\": \"image/jpeg\", \"meta\": {\"width\": 1500, \"height\": 1111}, \"url\": \"https://api.reelly.io/vault/ZZLvFZFt/H7zye3hEanlmxHLrUHaErCXGA-8/JrCuXA../10.jpg\"}",
+            "developer": "Burtville Developments",
+            "has_escrow": false,
+            "id": 2977,
+            "is_partner_project": false,
+            "max_price": null,
+            "min_price": 2145000,
+            "min_price_aed": 2145000,
+            "min_price_per_area_unit": null,
+            "name": "Bab Al Qasr Garden Residence 66",
+            "post_handover": false,
+            "price_currency": "AED",
+            "sale_status": "Presale(EOI)",
+            "status": "Presale"
+        },
+        {
+            "area": "Jumeirah Village Circle (JVC)",
+            "area_unit": "sqft",
+            "completion_datetime": "2027-12-31T00:00:00",
+            "coordinates": "25.051439409914565, 55.21847862686632",
+            "cover_image_url": "{\"access\": \"public\", \"path\": \"/vault/ZZLvFZFt/wpUv25cdwkASDZOzFokcno0P5pM/_x48Ig../cover.jpg\", \"name\": \"cover.jpg\", \"type\": \"image\", \"size\": 56069, \"mime\": \"image/jpeg\", \"meta\": {\"width\": 1200, \"height\": 678}, \"url\": \"https://api.reelly.io/vault/ZZLvFZFt/wpUv25cdwkASDZOzFokcno0P5pM/_x48Ig../cover.jpg\"}",
+            "developer": "Tasmeer Indigo Properties",
+            "has_escrow": false,
+            "id": 2796,
+            "is_partner_project": false,
+            "max_price": null,
+            "min_price": 742537,
+            "min_price_aed": 742537,
+            "min_price_per_area_unit": null,
+            "name": "SquareX One",
+            "post_handover": false,
+            "price_currency": "AED",
+            "sale_status": "Presale(EOI)",
+            "status": "Presale"
+        },
+        {
+            "area": "Meydan City",
+            "area_unit": "sqft",
+            "completion_datetime": "2027-10-31T00:00:00",
+            "coordinates": "25.179191625401042, 55.32411066117036",
+            "cover_image_url": "{\"access\": \"public\", \"path\": \"/vault/ZZLvFZFt/k2zc4NBC6KLBiKz5N2EyUxwisQE/Wz3Umw../17.jpg\", \"name\": \"17.jpg\", \"type\": \"image\", \"size\": 254373, \"mime\": \"image/jpeg\", \"meta\": {\"width\": 1500, \"height\": 899}, \"url\": \"https://api.reelly.io/vault/ZZLvFZFt/k2zc4NBC6KLBiKz5N2EyUxwisQE/Wz3Umw../17.jpg\"}",
+            "developer": "True Future",
+            "has_escrow": false,
+            "id": 2959,
+            "is_partner_project": false,
+            "max_price": null,
+            "min_price": 1350000,
+            "min_price_aed": 1350000,
+            "min_price_per_area_unit": null,
+            "name": "Future Residence",
+            "post_handover": false,
+            "price_currency": "AED",
+            "sale_status": "Presale(EOI)",
+            "status": "Presale"
+        },
+        {
+            "area": "Dubai Islands",
+            "area_unit": "sqft",
+            "completion_datetime": "2028-09-30T00:00:00",
+            "coordinates": "25.286389037156667, 55.29858923641448",
+            "cover_image_url": "{\"access\": \"public\", \"path\": \"/vault/ZZLvFZFt/VpWVA-sp8YiWb22gNmWCba-egls/uTA5EQ../2+4_11zon.jpg\", \"name\": \"2 4_11zon.jpg\", \"type\": \"image\", \"size\": 897003, \"mime\": \"image/jpeg\", \"meta\": {\"width\": 1500, \"height\": 846}, \"url\": \"https://api.reelly.io/vault/ZZLvFZFt/VpWVA-sp8YiWb22gNmWCba-egls/uTA5EQ../2+4_11zon.jpg\"}",
+            "developer": "Samana",
+            "has_escrow": false,
+            "id": 2852,
+            "is_partner_project": false,
+            "max_price": null,
+            "min_price": 2180000,
+            "min_price_aed": 2180000,
+            "min_price_per_area_unit": null,
+            "name": "Ocean Crest",
+            "post_handover": false,
+            "price_currency": "AED",
+            "sale_status": "Presale(EOI)",
+            "status": "Presale"
+        },
+        {
+            "area": "Dubai Islands",
+            "area_unit": "sqft",
+            "completion_datetime": "2027-12-31T00:00:00",
+            "coordinates": "25.3003885134916, 55.315399696017174",
+            "cover_image_url": "{\"access\": \"public\", \"path\": \"/vault/ZZLvFZFt/L7JyAHRYi9AwN_r7FY4fpBQ0W6w/lRWMgA../0.jpg\", \"name\": \"0.jpg\", \"type\": \"image\", \"size\": 302403, \"mime\": \"image/jpeg\", \"meta\": {\"width\": 1500, \"height\": 844}, \"url\": \"https://api.reelly.io/vault/ZZLvFZFt/L7JyAHRYi9AwN_r7FY4fpBQ0W6w/lRWMgA../0.jpg\"}",
+            "developer": "Wellington Developments",
+            "has_escrow": true,
+            "id": 2930,
+            "is_partner_project": false,
+            "max_price": null,
+            "min_price": 2212824,
+            "min_price_aed": 2212824,
+            "min_price_per_area_unit": null,
+            "name": "Wellington Ocean Walk",
+            "post_handover": true,
+            "price_currency": "AED",
+            "sale_status": "Presale(EOI)",
+            "status": "Presale"
+        },
+        {
+            "area": "Arjan",
+            "area_unit": "sqft",
+            "completion_datetime": "2028-09-30T00:00:00",
+            "coordinates": "25.063013993390086, 55.23122382705161",
+            "cover_image_url": "{\"access\": \"public\", \"path\": \"/vault/ZZLvFZFt/9A-_l-XH78C1lkMis1_5STEbD6s/sT-poQ../1.jpg\", \"name\": \"1.jpg\", \"type\": \"image\", \"size\": 203382, \"mime\": \"image/jpeg\", \"meta\": {\"width\": 1500, \"height\": 844}, \"url\": \"https://api.reelly.io/vault/ZZLvFZFt/9A-_l-XH78C1lkMis1_5STEbD6s/sT-poQ../1.jpg\"}",
+            "developer": "Samana",
+            "has_escrow": true,
+            "id": 2963,
+            "is_partner_project": false,
+            "max_price": null,
+            "min_price": 859000,
+            "min_price_aed": 859000,
+            "min_price_per_area_unit": null,
+            "name": "Samana Imperial Garden",
+            "post_handover": true,
+            "price_currency": "AED",
+            "sale_status": "Presale(EOI)",
+            "status": "Presale"
+        },
+        {
+            "area": "Arjan",
+            "area_unit": "sqft",
+            "completion_datetime": "2027-09-30T00:00:00",
+            "coordinates": "25.05763185920099, 55.226144579156674",
+            "cover_image_url": "{\"access\": \"public\", \"path\": \"/vault/ZZLvFZFt/XaGpsHZlYsnDu899uz6mfuXPy1c/_56BdA../11_4_11zon.jpg\", \"name\": \"11_4_11zon.jpg\", \"type\": \"image\", \"size\": 843841, \"mime\": \"image/jpeg\", \"meta\": {\"width\": 1500, \"height\": 1347}, \"url\": \"https://api.reelly.io/vault/ZZLvFZFt/XaGpsHZlYsnDu899uz6mfuXPy1c/_56BdA../11_4_11zon.jpg\"}",
+            "developer": "Arete",
+            "has_escrow": false,
+            "id": 2919,
+            "is_partner_project": false,
+            "max_price": null,
+            "min_price": 641333,
+            "min_price_aed": 641333,
+            "min_price_per_area_unit": null,
+            "name": "Urban Horizon",
+            "post_handover": true,
+            "price_currency": "AED",
+            "sale_status": "Presale(EOI)",
+            "status": "Presale"
+        },
+        {
+            "area": "Dubai Islands",
+            "area_unit": "sqft",
+            "completion_datetime": "2028-12-31T00:00:00",
+            "coordinates": "25.297458,55.322149",
+            "cover_image_url": "{\"access\": \"public\", \"path\": \"/vault/ZZLvFZFt/0hNC4JwLzd_ycX_u-8h6tCJ7Gz4/yuehSg../photo_2025-07-29_08-27-49.jpg\", \"name\": \"photo_2025-07-29_08-27-49.jpg\", \"type\": \"image\", \"size\": 419669, \"mime\": \"image/jpeg\", \"meta\": {\"width\": 4801, \"height\": 2560}, \"url\": \"https://api.reelly.io/vault/ZZLvFZFt/0hNC4JwLzd_ycX_u-8h6tCJ7Gz4/yuehSg../photo_2025-07-29_08-27-49.jpg\"}",
+            "developer": "Casa Vista Development LLC",
+            "has_escrow": false,
+            "id": 2813,
+            "is_partner_project": false,
+            "max_price": null,
+            "min_price": null,
+            "min_price_aed": 0,
+            "min_price_per_area_unit": null,
+            "name": "Aquora by Casa Vista Development",
+            "post_handover": false,
+            "price_currency": "AED",
+            "sale_status": "Presale(EOI)",
+            "status": "Presale"
+        },
+        {
+            "area": "Dubai South",
+            "area_unit": "sqft",
+            "completion_datetime": "2027-04-30T00:00:00",
+            "coordinates": "24.951239389419296, 55.22411183308598",
+            "cover_image_url": "{\"access\": \"public\", \"path\": \"/vault/ZZLvFZFt/9sbYcWe4X58Evu-EwnGJfGJ9XBc/ORCWgQ../WhatsApp+Image+2025-08-06+at+18.04.35.jpeg\", \"name\": \"WhatsApp Image 2025-08-06 at 18.04.35.jpeg\", \"type\": \"image\", \"size\": 141827, \"mime\": \"image/jpeg\", \"meta\": {\"width\": 1280, \"height\": 720}, \"url\": \"https://api.reelly.io/vault/ZZLvFZFt/9sbYcWe4X58Evu-EwnGJfGJ9XBc/ORCWgQ../WhatsApp+Image+2025-08-06+at+18.04.35.jpeg\"}",
+            "developer": "HZ DEVELOPMENT",
+            "has_escrow": false,
+            "id": 2832,
+            "is_partner_project": false,
+            "max_price": null,
+            "min_price": 625000,
+            "min_price_aed": 625000,
+            "min_price_per_area_unit": null,
+            "name": "Oasis Residences",
+            "post_handover": true,
+            "price_currency": "AED",
+            "sale_status": "Presale(EOI)",
+            "status": "Presale"
+        },
+        {
+            "area": "Jumeirah Village Circle (JVC)",
+            "area_unit": "sqft",
+            "completion_datetime": "2027-06-30T00:00:00",
+            "coordinates": "25.04940210821765, 55.21267983431779",
+            "cover_image_url": "{\"access\": \"public\", \"path\": \"/vault/ZZLvFZFt/GK1so981zgFJ0riSgsj2LBAW7SM/quQyOw../12.png\", \"name\": \"12.png\", \"type\": \"image\", \"size\": 536759, \"mime\": \"image/png\", \"meta\": {\"width\": 1500, \"height\": 1000}, \"url\": \"https://api.reelly.io/vault/ZZLvFZFt/GK1so981zgFJ0riSgsj2LBAW7SM/quQyOw../12.png\"}",
+            "developer": "Object 1",
+            "has_escrow": false,
+            "id": 2337,
+            "is_partner_project": true,
+            "max_price": null,
+            "min_price": 867387,
+            "min_price_aed": 867387,
+            "min_price_per_area_unit": null,
+            "name": "IR1DIAN Park",
+            "post_handover": false,
+            "price_currency": "AED",
+            "sale_status": "Presale(EOI)",
+            "status": "Presale"
+        },
+        {
+            "area": "Meydan City",
+            "area_unit": "sqft",
+            "completion_datetime": "2028-03-31T00:00:00",
+            "coordinates": "25.17922112541689, 55.322525764505784",
+            "cover_image_url": "{\"access\": \"public\", \"path\": \"/vault/ZZLvFZFt/PULH9omerWYGo0OljgwJionbMzI/o7S4AA../0.jpg\", \"name\": \"0.jpg\", \"type\": \"image\", \"size\": 64145, \"mime\": \"image/jpeg\", \"meta\": {\"width\": 766, \"height\": 766}, \"url\": \"https://api.reelly.io/vault/ZZLvFZFt/PULH9omerWYGo0OljgwJionbMzI/o7S4AA../0.jpg\"}",
+            "developer": "DHG Properties",
+            "has_escrow": false,
+            "id": 2961,
+            "is_partner_project": false,
+            "max_price": null,
+            "min_price": 1579516,
+            "min_price_aed": 1579516,
+            "min_price_per_area_unit": null,
+            "name": "Helvetia Verde",
+            "post_handover": false,
+            "price_currency": "AED",
+            "sale_status": "Presale(EOI)",
+            "status": "Presale"
+        },
+        {
+            "area": "Dubai Production City",
+            "area_unit": "sqft",
+            "completion_datetime": "2027-12-31T00:00:00",
+            "coordinates": "25.02621247765016, 55.1899923382549",
+            "cover_image_url": "{\"access\": \"public\", \"path\": \"/vault/ZZLvFZFt/sKkfB_1gmxnH-DZ7vj9HOL6EaVo/aYYDZg../8.jpg\", \"name\": \"8.jpg\", \"type\": \"image\", \"size\": 772380, \"mime\": \"image/jpeg\", \"meta\": {\"width\": 1833, \"height\": 1526}, \"url\": \"https://api.reelly.io/vault/ZZLvFZFt/sKkfB_1gmxnH-DZ7vj9HOL6EaVo/aYYDZg../8.jpg\"}",
+            "developer": "GFS Developments",
+            "has_escrow": false,
+            "id": 2849,
+            "is_partner_project": false,
+            "max_price": null,
+            "min_price": 666960,
+            "min_price_aed": 666960,
+            "min_price_per_area_unit": null,
+            "name": "Coventry Place",
+            "post_handover": false,
+            "price_currency": "AED",
+            "sale_status": "Presale(EOI)",
+            "status": "Presale"
+        }
+    ],
+    "pagination": {
+        "has_next": true,
+        "has_prev": false,
+        "page": 1,
+        "pages": 149,
+        "per_page": 12,
+        "total": 1782
+    }
+}
+
+Get property details
+get
+https://search-listings-production.up.railway.app/v1/properties/{property_id}
+Path Params
+property_id
+integer
+required
+Property ID
+
+ Responses
+
+200
+Property details successfully retrieved
+
+Response body
+object
+id
+integer
+name
+string
+developer
+string
+developer_website
+string
+area
+string
+city
+string
+country
+string
+status
+string
+is_partner_project
+boolean
+cover_image_url
+string
+post_handover
+boolean
+sale_status
+string
+completion_datetime
+date-time
+has_escrow
+boolean
+coordinates
+string
+overview
+string
+website
+string
+deposit_description
+string
+unit_blocks
+array of objects
+object
+id
+integer
+name
+string
+unit_type
+string
+normalized_type
+string
+unit_bedrooms
+string
+units_amount
+integer
+units_area_from
+number
+units_area_to
+number
+units_price_from
+number
+units_price_to
+number
+area_unit
+string
+price_currency
+string
+typical_unit_image_url
+string
+payment_plans
+array
+master_plan
+array
+lobby
+array
+interior
+array
+architecture
+array
+buildings
+array
+
+example: 
+{
+    "architecture": [
+        {
+            "access": "public",
+            "meta": {
+                "height": 856,
+                "width": 1401
+            },
+            "mime": "image/jpeg",
+            "name": "4.jpg",
+            "path": "/vault/ZZLvFZFt/40CWTfC2_KeuR71fWfO3y9JDgYI/BWAWcQ../4.jpg",
+            "size": 17796407,
+            "type": "image",
+            "url": "https://api.reelly.io/vault/ZZLvFZFt/40CWTfC2_KeuR71fWfO3y9JDgYI/BWAWcQ../4.jpg"
+        },
+        {
+            "access": "public",
+            "meta": {
+                "height": 657,
+                "width": 1078
+            },
+            "mime": "image/jpeg",
+            "name": "12 (1).jpg",
+            "path": "/vault/ZZLvFZFt/7rI_1CombCBILG0yzwmAwLBHoGA/bo2Upg../12+%281%29.jpg",
+            "size": 17796407,
+            "type": "image",
+            "url": "https://api.reelly.io/vault/ZZLvFZFt/7rI_1CombCBILG0yzwmAwLBHoGA/bo2Upg../12+%281%29.jpg"
+        }
+    ],
+    "area": "Dubai Creek Harbour",
+    "area_unit": "sqft",
+    "brochure_url": "https://drive.google.com/file/d/1DPbm7eQ2OWlMnd6-erA7yHNNCGCWDfhl/view?usp=sharing",
+    "buildings": [
+        [
+            {
+                "Building_ID": "recciRmdwTf366H2c",
+                "Building_image": [
+                    {
+                        "access": "public",
+                        "meta": {
+                            "height": 643,
+                            "width": 1121
+                        },
+                        "mime": "image/jpeg",
+                        "name": "home.jpg",
+                        "path": "/vault/ZZLvFZFt/hklDAmP8LRTufxllCqN5c3xovsw/NCRthg../home.jpg",
+                        "size": 17796407,
+                        "type": "image",
+                        "url": "https://api.reelly.io/vault/ZZLvFZFt/hklDAmP8LRTufxllCqN5c3xovsw/NCRthg../home.jpg"
+                    }
+                ],
+                "Completion_date": null,
+                "Description": "1, 2 & 3 bedroom apartments",
+                "Name": "2 Towers",
+                "Project": [
+                    1689
+                ],
+                "created_at": 1721743571000,
+                "id": 1669
+            }
+        ]
+    ],
+    "city": null,
+    "completion_datetime": "2029-01-31T00:00:00",
+    "coordinates": "25.207196485632345, 55.35200298403925",
+    "country": "United Arab Emirates",
+    "cover": {
+        "access": "public",
+        "meta": {
+            "height": 392,
+            "width": 1121
+        },
+        "mime": "image/jpeg",
+        "name": "cover.jpg",
+        "path": "/vault/ZZLvFZFt/J80kHyCyQVbouUxug1-8Q_S6_xo/pK6jWw../cover.jpg",
+        "size": 98164,
+        "type": "image",
+        "url": "https://api.reelly.io/vault/ZZLvFZFt/J80kHyCyQVbouUxug1-8Q_S6_xo/pK6jWw../cover.jpg"
+    },
+    "cover_image_url": "{\"access\": \"public\", \"path\": \"/vault/ZZLvFZFt/J80kHyCyQVbouUxug1-8Q_S6_xo/pK6jWw../cover.jpg\", \"name\": \"cover.jpg\", \"type\": \"image\", \"size\": 98164, \"mime\": \"image/jpeg\", \"meta\": {\"width\": 1121, \"height\": 392}, \"url\": \"https://api.reelly.io/vault/ZZLvFZFt/J80kHyCyQVbouUxug1-8Q_S6_xo/pK6jWw../cover.jpg\"}",
+    "deposit_description": null,
+    "developer": "Emaar",
+    "developer_data": {
+        "description": "Emaar Properties is a Public Joint Stock Company listed on the Dubai Financial Market, with investor relations reflecting its position as a leading global real estate and lifestyle developer. Its experienced board of directors and innovative leadership team have secured Emaar’s place as a top-tier name in the industry, supported by a dedicated group of principal officers who uphold a commitment to excellence and continuous improvement. \n\nEmaar also prioritizes corporate sustainability, viewing it as a fundamental investment in the future for both society and the company itself. Through the Emaar Foundation, the group drives and coordinates its corporate social responsibility efforts, reinforcing its dedication to making a positive impact. This holistic approach combines industry leadership, investor engagement, and community focus, ensuring Emaar remains at the forefront of real estate and lifestyle development globally.",
+        "email": "customercare@emaar.ae",
+        "id": 72,
+        "logo_image": [
+            {
+                "url": "https://api.reelly.io/vault/ZZLvFZFt/T3c_A0bgpAh4wLgh3yGtkQMXWXA/hrGilQ../1594629495705.jpeg"
+            }
+        ],
+        "name": "Emaar",
+        "office_address": "Emaar Sales Center, Downtown Dubai, Dubai, UAE",
+        "website": "https://www.emaar.com/",
+        "working_hours": [
+            {
+                "days": "Monday - Friday",
+                "time_range": "9:30 AM - 10 PM"
+            },
+            {
+                "days": "Saturday",
+                "time_range": "9:30 AM - 7 PM"
+            },
+            {
+                "days": "Sunday",
+                "time_range": "9:30 AM - 10 PM"
+            }
+        ]
+    },
+    "developer_website": "https://www.emaar.com/",
+    "facilities": [
+        {
+            "image": {
+                "access": "public",
+                "meta": {
+                    "height": 792,
+                    "width": 1400
+                },
+                "mime": "image/jpeg",
+                "name": "12.jpg",
+                "path": "/vault/ZZLvFZFt/TuENtT1GWjl4D99rtssoQ2onJYM/e0CwUQ../12.jpg",
+                "size": 17796407,
+                "type": "image",
+                "url": "https://api.reelly.io/vault/ZZLvFZFt/TuENtT1GWjl4D99rtssoQ2onJYM/e0CwUQ../12.jpg"
+            },
+            "image_source": "Visualisation from developer",
+            "name": "Swimming Pool"
+        },
+        {
+            "image": {
+                "access": "public",
+                "meta": {
+                    "height": 961,
+                    "width": 1400
+                },
+                "mime": "image/jpeg",
+                "name": "13.jpg",
+                "path": "/vault/ZZLvFZFt/uqtP7wTV_suCeZCW3x6yJJNr5tQ/N97q1A../13.jpg",
+                "size": 17796407,
+                "type": "image",
+                "url": "https://api.reelly.io/vault/ZZLvFZFt/uqtP7wTV_suCeZCW3x6yJJNr5tQ/N97q1A../13.jpg"
+            },
+            "image_source": "Visualisation from developer",
+            "name": " Kids Play Area"
+        },
+        {
+            "image": {
+                "access": "public",
+                "meta": {
+                    "height": 756,
+                    "width": 1008
+                },
+                "mime": "image/jpeg",
+                "name": "Moseley_Hall_lounge.jpg",
+                "path": "/vault/ZZLvFZFt/M5vc6YtjR8oiYPKrHuKZxQFRVUI/FwxQ1Q../Moseley_Hall_lounge.jpg",
+                "size": 17796407,
+                "type": "image",
+                "url": "https://api.reelly.io/vault/ZZLvFZFt/M5vc6YtjR8oiYPKrHuKZxQFRVUI/FwxQ1Q../Moseley_Hall_lounge.jpg"
+            },
+            "image_source": "Image for general understanding",
+            "name": "Multipurpose Room"
+        },
+        {
+            "image": {
+                "access": "public",
+                "meta": {
+                    "height": 1008,
+                    "width": 1401
+                },
+                "mime": "image/jpeg",
+                "name": "10.jpg",
+                "path": "/vault/ZZLvFZFt/yPU0uYoC3FgAk7_OYnAIJC2kmko/nzVdwg../10.jpg",
+                "size": 17796407,
+                "type": "image",
+                "url": "https://api.reelly.io/vault/ZZLvFZFt/yPU0uYoC3FgAk7_OYnAIJC2kmko/nzVdwg../10.jpg"
+            },
+            "image_source": "Visualisation from developer",
+            "name": "Yoga Area"
+        },
+        {
+            "image": {
+                "access": "public",
+                "meta": {
+                    "height": 805,
+                    "width": 1838
+                },
+                "mime": "image/jpeg",
+                "name": "render-interiorismo-gimnasio-parklane-hotel-por-intercon-w1920.jpg",
+                "path": "/vault/ZZLvFZFt/0uniM0coKH-m8aZZ0a5JisAnpmM/rkD98Q../render-interiorismo-gimnasio-parklane-hotel-por-intercon-w1920.jpg",
+                "size": 17796407,
+                "type": "image",
+                "url": "https://api.reelly.io/vault/ZZLvFZFt/0uniM0coKH-m8aZZ0a5JisAnpmM/rkD98Q../render-interiorismo-gimnasio-parklane-hotel-por-intercon-w1920.jpg"
+            },
+            "image_source": "Image for general understanding",
+            "name": "Gym"
+        },
+        {
+            "image": {
+                "access": "public",
+                "meta": {
+                    "height": 512,
+                    "width": 910
+                },
+                "mime": "image/jpeg",
+                "name": "brazil-agua-branca.jpg",
+                "path": "/vault/ZZLvFZFt/EyodpDHh6J6WWl5w9A0LbwPI2PI/yXaR-Q../brazil-agua-branca.jpg",
+                "size": 17796407,
+                "type": "image",
+                "url": "https://api.reelly.io/vault/ZZLvFZFt/EyodpDHh6J6WWl5w9A0LbwPI2PI/yXaR-Q../brazil-agua-branca.jpg"
+            },
+            "image_source": "Image for general understanding",
+            "name": "Kids Pool"
+        },
+        {
+            "image": {
+                "access": "public",
+                "meta": {
+                    "height": 810,
+                    "width": 1401
+                },
+                "mime": "image/jpeg",
+                "name": "2.jpg",
+                "path": "/vault/ZZLvFZFt/r3bm8LhP1-GKR7RCKnpoejD02W8/FCoqzA../2.jpg",
+                "size": 17796407,
+                "type": "image",
+                "url": "https://api.reelly.io/vault/ZZLvFZFt/r3bm8LhP1-GKR7RCKnpoejD02W8/FCoqzA../2.jpg"
+            },
+            "image_source": "Visualisation from developer",
+            "name": "Amenities Platform"
+        },
+        {
+            "image": {
+                "access": "public",
+                "meta": {
+                    "height": 1842,
+                    "width": 3543
+                },
+                "mime": "image/jpeg",
+                "name": "6bf7bda36cfc41b2547f00aebf0d6adc.jpg",
+                "path": "/vault/ZZLvFZFt/_AQGxIFgc_mpfS-xte2kLDxwWGM/pOf4ig../6bf7bda36cfc41b2547f00aebf0d6adc.jpg",
+                "size": 17796407,
+                "type": "image",
+                "url": "https://api.reelly.io/vault/ZZLvFZFt/_AQGxIFgc_mpfS-xte2kLDxwWGM/pOf4ig../6bf7bda36cfc41b2547f00aebf0d6adc.jpg"
+            },
+            "image_source": "Image for general understanding",
+            "name": "Elegant Clubhouse"
+        }
+    ],
+    "furnishing": "No",
+    "has_escrow": true,
+    "id": 1689,
+    "interior": [
+        {
+            "access": "public",
+            "meta": {
+                "height": 1038,
+                "width": 1401
+            },
+            "mime": "image/jpeg",
+            "name": "14.jpg",
+            "path": "/vault/ZZLvFZFt/UP_1k_ODVigT12yquR4VpODFwiA/7mVw6w../14.jpg",
+            "size": 17796407,
+            "type": "image",
+            "url": "https://api.reelly.io/vault/ZZLvFZFt/UP_1k_ODVigT12yquR4VpODFwiA/7mVw6w../14.jpg"
+        },
+        {
+            "access": "public",
+            "meta": {
+                "height": 1013,
+                "width": 1401
+            },
+            "mime": "image/jpeg",
+            "name": "11.jpg",
+            "path": "/vault/ZZLvFZFt/UQl5Sk4wJFY3BavF3EMUunpMWZY/td3d3Q../11.jpg",
+            "size": 17796407,
+            "type": "image",
+            "url": "https://api.reelly.io/vault/ZZLvFZFt/UQl5Sk4wJFY3BavF3EMUunpMWZY/td3d3Q../11.jpg"
+        }
+    ],
+    "is_partner_project": false,
+    "layouts_pdf": "https://api.reelly.io/vault/ZZLvFZFt/V8QWCY1exhImR0Ynu79MMiEB2Ag/t_yJ-Q../Floorplans.pdf",
+    "lobby": [
+        {
+            "access": "public",
+            "meta": {
+                "height": 952,
+                "width": 1500
+            },
+            "mime": "image/jpeg",
+            "name": "14.jpg",
+            "path": "/vault/ZZLvFZFt/_csDeVRLxigEXxvtUfGgAXVXDQ4/2HV9eA../14.jpg",
+            "size": 17796407,
+            "type": "image",
+            "url": "https://api.reelly.io/vault/ZZLvFZFt/_csDeVRLxigEXxvtUfGgAXVXDQ4/2HV9eA../14.jpg"
+        }
+    ],
+    "map_points": [
+        {
+            "distance_km": 2.5,
+            "name": "Creek Beach"
+        },
+        {
+            "distance_km": 3,
+            "name": "Blossom Creek Harbour"
+        },
+        {
+            "distance_km": 3.4,
+            "name": "Central Park"
+        },
+        {
+            "distance_km": 5.6,
+            "name": "Dubai Festival City Mall"
+        },
+        {
+            "distance_km": 12.8,
+            "name": "Downtown Dubai"
+        },
+        {
+            "distance_km": 14.4,
+            "name": "Dubai International Airport"
+        }
+    ],
+    "master_plan": [
+        {
+            "url": "https://api.reelly.io/vault/ZZLvFZFt/OQrKozu9zP0idmOKJjgVtRKW-6c/MpN7gQ../master.png"
+        }
+    ],
+    "max_area": 1938.5079719626679,
+    "max_price": null,
+    "min_area": 668.9713551401828,
+    "min_price": 1599706.21,
+    "min_price_aed": 1599706.21,
+    "name": "Altus",
+    "overview": "##### Project general facts\n\nAltus by Emaar offers a diverse selection of city-inspired residences. The 1-bedroom units, perfect for individuals or couples, provide expansive living spaces and stunning city views. The 2 and 3-bedroom suites elevate the luxury experience, featuring modern bathrooms, spacious closets, and panoramic balconies that create spaces truly at the heart of urban living.\n\nArchitectural elements such as balconies, horizontal ledges, and tinted window glass minimize direct sunlight intrusion, ensuring cooler interiors. Emphasis is placed on retaining existing vegetation for sustainability, reducing energy use, and enhancing environmental quality. The design of Altus reflects a commitment to both aesthetic appeal and environmental responsibility.\n\nAltus promotes efficient water use through innovative measures such as condensate and planter drain collection for landscape irrigation. These sustainable practices highlight the project’s dedication to ecological balance while offering residents an elegant and comfortable living environment. Altus by Emaar represents a harmonious blend of luxury, functionality, and sustainability in the heart of the city.\n\n##### Finishing and materials\n\nFully finished using high quality materials.\n\n##### Kitchen and appliances\n\nEquipped kitchen.\n\n##### Furnishing\n\nNo.\n\n##### Location description and benefits\n\nDubai Creek Harbour - heart of bold new vision for Dubai. The eight square kilometre waterfront destination is bound to push the frontiers of architecture, design and the quality of life. Creek Beach is Dubai’s first-of-its-kind urban beach in the heart of Dubai Creek Harbour. Located along the historic Dubai Creek. \n\nCreek Beach is conceived to offered you the ultimate family-friendly retreat. From 700 metres of pristine white sands to the infinity pool and spectacular sunset views, this is paradise reborn. The centerpiece of Dubai Creek Harbour is the breathtaking Dubai Creek Tower, set to surpass the Burj Khalifa as the tallest structure globally. This architectural marvel is designed by the renowned architect Santiago Calatrava and will serve as a symbol of Dubai's ambition and innovation.\n\nDubai Creek Harbour represents a bold vision for the future of Dubai, blending cutting-edge design, sustainability, and cultural richness to create a dynamic and iconic waterfront destination. It not only serves as a testament to Dubai's commitment to innovation but also as a symbol of its ambition to create world-class living spaces.\n",
+    "parking": "",
+    "parkings": [
+        [
+            {
+                "Parking_spaces": 1,
+                "Unit_bedrooms": [
+                    "1BR",
+                    "2BR"
+                ],
+                "Unit_type": "Apartments"
+            }
+        ],
+        [
+            {
+                "Parking_spaces": 2,
+                "Unit_bedrooms": [
+                    "3BR"
+                ],
+                "Unit_type": "Apartments"
+            }
+        ]
+    ],
+    "payment_plans": [
+        {
+            "Payments": [
+                [
+                    {
+                        "Order": 1,
+                        "Payment_time": "On booking",
+                        "Percent_of_payment": "10"
+                    }
+                ],
+                [
+                    {
+                        "Order": 2,
+                        "Payment_time": "During construction",
+                        "Percent_of_payment": "70"
+                    }
+                ],
+                [
+                    {
+                        "Order": 3,
+                        "Payment_time": "Upon Handover",
+                        "Percent_of_payment": "20"
+                    }
+                ]
+            ],
+            "Plan_name": "Payment Plan",
+            "months_after_handover": 0
+        }
+    ],
+    "post_handover": false,
+    "price_currency": "AED",
+    "readiness": "0%",
+    "sale_status": "Start of sales",
+    "service_charge": "20-22 AED/sqft",
+    "slug": "emaar-altus",
+    "status": "Presale",
+    "unit_availability": [
+        {
+            "building_name": "Building 1",
+            "units": [
+                {
+                    "area_from": 1595.963453,
+                    "area_unit": "sqft",
+                    "bedroom_type": "3 bedroom",
+                    "last_updated": "2025-07-10T03:11:24.289810",
+                    "price_currency": "AED",
+                    "price_from": 3800888,
+                    "price_to": 3800888,
+                    "units_available": 3
+                }
+            ]
+        }
+    ],
+    "unit_blocks": [
+        {
+            "area_unit": "sqft",
+            "bedrooms_amount": "1",
+            "id": 5001,
+            "normalized_type": "Apartments",
+            "price_currency": "AED",
+            "typical_unit_image_url": "[{\"access\":\"public\",\"path\":\"\\/vault\\/ZZLvFZFt\\/HTNDTE7ND-sK5FGdAGU4kNQn9Ts\\/eEG0Zw..\\/1br.png\",\"name\":\"1br.png\",\"type\":\"image\",\"size\":17796407,\"mime\":\"image\\/png\",\"meta\":{\"width\":800,\"height\":800},\"url\":\"https:\\/\\/xdil-qda0-zofk.m2.xano.io\\/vault\\/ZZLvFZFt\\/HTNDTE7ND-sK5FGdAGU4kNQn9Ts\\/eEG0Zw..\\/1br.png\"}]",
+            "unit_bedrooms": "1 bedroom",
+            "unit_type": "Apartments",
+            "units_amount": 0,
+            "units_area_from": null,
+            "units_area_from_m2": "62.14953271028",
+            "units_area_to": null,
+            "units_area_to_m2": "76.915887850467",
+            "units_price_from": null,
+            "units_price_from_aed": null,
+            "units_price_to": null,
+            "units_price_to_aed": null
+        },
+        {
+            "area_unit": "sqft",
+            "bedrooms_amount": "2",
+            "id": 5002,
+            "normalized_type": "Apartments",
+            "price_currency": "AED",
+            "typical_unit_image_url": "[{\"access\":\"public\",\"path\":\"\\/vault\\/ZZLvFZFt\\/yDhUHoedY-rPQhKIAXqgwuaGbB0\\/mxxpcQ..\\/2br.png\",\"name\":\"2br.png\",\"type\":\"image\",\"size\":17796407,\"mime\":\"image\\/png\",\"meta\":{\"width\":800,\"height\":800},\"url\":\"https:\\/\\/xdil-qda0-zofk.m2.xano.io\\/vault\\/ZZLvFZFt\\/yDhUHoedY-rPQhKIAXqgwuaGbB0\\/mxxpcQ..\\/2br.png\"}]",
+            "unit_bedrooms": "2 bedroom",
+            "unit_type": "Apartments",
+            "units_amount": 0,
+            "units_area_from": null,
+            "units_area_from_m2": "106.44859813084",
+            "units_area_to": null,
+            "units_area_to_m2": "135.88785046729",
+            "units_price_from": null,
+            "units_price_from_aed": null,
+            "units_price_to": null,
+            "units_price_to_aed": null
+        },
+        {
+            "area_unit": "sqft",
+            "bedrooms_amount": "3",
+            "id": 5003,
+            "normalized_type": "Apartments",
+            "price_currency": "AED",
+            "typical_unit_image_url": "[{\"access\":\"public\",\"path\":\"\\/vault\\/ZZLvFZFt\\/GY7G-MNStwHQREHYze7dRgtuhZ8\\/R-xHNw..\\/3br.png\",\"name\":\"3br.png\",\"type\":\"image\",\"size\":17796407,\"mime\":\"image\\/png\",\"meta\":{\"width\":800,\"height\":800},\"url\":\"https:\\/\\/xdil-qda0-zofk.m2.xano.io\\/vault\\/ZZLvFZFt\\/GY7G-MNStwHQREHYze7dRgtuhZ8\\/R-xHNw..\\/3br.png\"}]",
+            "unit_bedrooms": "3 bedroom",
+            "unit_type": "Apartments",
+            "units_amount": 0,
+            "units_area_from": null,
+            "units_area_from_m2": "149.15887850467",
+            "units_area_to": null,
+            "units_area_to_m2": "180.09345794393",
+            "units_price_from": 3990000,
+            "units_price_from_aed": 3990000,
+            "units_price_to": 4170000,
+            "units_price_to_aed": 4170000
+        }
+    ],
+    "video_url": "https://www.youtube.com/watch?v=ASDW-fJCVpA",
+    "website": "https://platform.reelly.io/project?project=rec2G3AMjK2S2FsNk"
+}
+
+Get property markers
+get
+https://search-listings-production.up.railway.app/v1/property-markers
+Returns property markers for map display
+Query Params
+project_ids
+string
+Comma-separated list of project IDs
+
+unit_types
+string
+Comma-separated list of unit types
+
+areas
+string
+Comma-separated list of area IDs
+
+country
+string
+Filter by country
+
+region
+string
+Filter by region
+
+status
+string
+Comma-separated list of project statuses
+
+is_partner_project
+boolean
+Filter by partner project status
+
+
+developer
+string
+Comma-separated list of developer IDs
+
+post_handover
+boolean
+Filter by post handover availability
+
+
+sale_status
+string
+Comma-separated list of sale statuses
+
+has_escrow
+boolean
+Filter by escrow availability
+
+
+unit_price_from
+number
+Minimum unit price
+
+unit_price_to
+number
+Maximum unit price
+
+price_type
+string
+enum
+Defaults to unit
+Whether to interpret price ranges as per unit or per area unit
+
+
+Allowed:
+
+unit
+
+area
+unit_area_from
+number
+Minimum unit area
+
+unit_area_to
+number
+Maximum unit area
+
+unit_bedrooms
+string
+Comma-separated list of bedroom configurations
+
+completion_date_ranges
+string
+Comma-separated list of completion date ranges
+
+preferred_currency
+string
+Defaults to AED
+Preferred currency for price values
+
+preferred_area_unit
+string
+Defaults to sqft
+Preferred unit for area values
+
+bbox_sw_lat
+number
+Southwest latitude of bounding box
+
+bbox_sw_lng
+number
+Southwest longitude of bounding box
+
+bbox_ne_lat
+number
+Northeast latitude of bounding box
+
+bbox_ne_lng
+number
+Northeast longitude of bounding box
+
+Responses
+
+200
+List of property markers successfully retrieved
+
+Response body
+object
+markers
+array of objects
+object
+id
+integer
+name
+string
+developer
+string
+area
+string
+coordinates
+string
+status
+string
+sale_status
+string
+is_partner_project
+boolean
+cover_image_url
+string
+min_price
+number
+total
+integer
+
+example : 
+{
+    "markers": [
+        {
+            "area": "Masdar City, Abu Dhabi",
+            "completion_date": "2029-06-30",
+            "coordinates": "24.43099508520978, 54.61504008936104",
+            "cover_image_url": "{\"access\": \"public\", \"path\": \"/vault/ZZLvFZFt/H7zye3hEanlmxHLrUHaErCXGA-8/JrCuXA../10.jpg\", \"name\": \"10.jpg\", \"type\": \"image\", \"size\": 388264, \"mime\": \"image/jpeg\", \"meta\": {\"width\": 1500, \"height\": 1111}, \"url\": \"https://api.reelly.io/vault/ZZLvFZFt/H7zye3hEanlmxHLrUHaErCXGA-8/JrCuXA../10.jpg\"}",
+            "developer": "Burtville Developments",
+            "id": 2977,
+            "is_partner_project": false,
+            "min_price": 2145000,
+            "name": "Bab Al Qasr Garden Residence 66",
+            "sale_status": "Presale(EOI)",
+            "status": "Presale"
+        },
+        {
+            "area": "Jumeirah Village Circle (JVC)",
+            "completion_date": "2027-12-31",
+            "coordinates": "25.051439409914565, 55.21847862686632",
+            "cover_image_url": "{\"access\": \"public\", \"path\": \"/vault/ZZLvFZFt/wpUv25cdwkASDZOzFokcno0P5pM/_x48Ig../cover.jpg\", \"name\": \"cover.jpg\", \"type\": \"image\", \"size\": 56069, \"mime\": \"image/jpeg\", \"meta\": {\"width\": 1200, \"height\": 678}, \"url\": \"https://api.reelly.io/vault/ZZLvFZFt/wpUv25cdwkASDZOzFokcno0P5pM/_x48Ig../cover.jpg\"}",
+            "developer": "Tasmeer Indigo Properties",
+            "id": 2796,
+            "is_partner_project": false,
+            "min_price": 742537,
+            "name": "SquareX One",
+            "sale_status": "Presale(EOI)",
+            "status": "Presale"
+        },
+        {
+            "area": "Meydan City",
+            "completion_date": "2027-10-31",
+            "coordinates": "25.179191625401042, 55.32411066117036",
+            "cover_image_url": "{\"access\": \"public\", \"path\": \"/vault/ZZLvFZFt/k2zc4NBC6KLBiKz5N2EyUxwisQE/Wz3Umw../17.jpg\", \"name\": \"17.jpg\", \"type\": \"image\", \"size\": 254373, \"mime\": \"image/jpeg\", \"meta\": {\"width\": 1500, \"height\": 899}, \"url\": \"https://api.reelly.io/vault/ZZLvFZFt/k2zc4NBC6KLBiKz5N2EyUxwisQE/Wz3Umw../17.jpg\"}",
+            "developer": "True Future",
+            "id": 2959,
+            "is_partner_project": false,
+            "min_price": 1350000,
+            "name": "Future Residence",
+            "sale_status": "Presale(EOI)",
+            "status": "Presale"
+        },
+        {
+            "area": "Dubai Islands",
+            "completion_date": "2028-09-30",
+            "coordinates": "25.286389037156667, 55.29858923641448",
+            "cover_image_url": "{\"access\": \"public\", \"path\": \"/vault/ZZLvFZFt/VpWVA-sp8YiWb22gNmWCba-egls/uTA5EQ../2+4_11zon.jpg\", \"name\": \"2 4_11zon.jpg\", \"type\": \"image\", \"size\": 897003, \"mime\": \"image/jpeg\", \"meta\": {\"width\": 1500, \"height\": 846}, \"url\": \"https://api.reelly.io/vault/ZZLvFZFt/VpWVA-sp8YiWb22gNmWCba-egls/uTA5EQ../2+4_11zon.jpg\"}",
+            "developer": "Samana",
+            "id": 2852,
+            "is_partner_project": false,
+            "min_price": 2180000,
+            "name": "Ocean Crest",
+            "sale_status": "Presale(EOI)",
+            "status": "Presale"
+        },
+        {
+            "area": "Dubai Islands",
+            "completion_date": "2027-12-31",
+            "coordinates": "25.3003885134916, 55.315399696017174",
+            "cover_image_url": "{\"access\": \"public\", \"path\": \"/vault/ZZLvFZFt/L7JyAHRYi9AwN_r7FY4fpBQ0W6w/lRWMgA../0.jpg\", \"name\": \"0.jpg\", \"type\": \"image\", \"size\": 302403, \"mime\": \"image/jpeg\", \"meta\": {\"width\": 1500, \"height\": 844}, \"url\": \"https://api.reelly.io/vault/ZZLvFZFt/L7JyAHRYi9AwN_r7FY4fpBQ0W6w/lRWMgA../0.jpg\"}",
+            "developer": "Wellington Developments",
+            "id": 2930,
+            "is_partner_project": false,
+            "min_price": 2212824,
+            "name": "Wellington Ocean Walk",
+            "sale_status": "Presale(EOI)",
+            "status": "Presale"
+        },

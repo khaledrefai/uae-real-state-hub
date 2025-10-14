@@ -1,0 +1,27 @@
+{
+  "uaeRealStateHubApp": {
+    "paymentPlanItem": {
+      "home": {
+        "title": "Payment Plan Items",
+        "refreshListLabel": "تحديث القائمة",
+        "createLabel": "إنشاء Payment Plan Item جديد",
+        "createOrEditLabel": "إنشاء أو تعديل Payment Plan Item",
+        "notFound": "لم يتم العثور على Payment Plan Items"
+      },
+      "created": "Payment Plan Item جديد تم إنشاؤه بالمعرف { param }",
+      "updated": "Payment Plan Item تم تحديثه بالمعرف { param }",
+      "deleted": "Payment Plan Item تم حذفه بالمعرف { param }",
+      "delete": {
+        "question": "هل أنت متأكد أنك تريد حذف Payment Plan Item { id }؟"
+      },
+      "detail": {
+        "title": "Payment Plan Item"
+      },
+      "id": "ID",
+      "orderNo": "Order No",
+      "paymentTime": "Payment Time",
+      "percentOfPayment": "Percent Of Payment",
+      "plan": "Plan"
+    }
+  }
+}

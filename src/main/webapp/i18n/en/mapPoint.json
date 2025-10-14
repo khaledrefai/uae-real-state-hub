@@ -1,0 +1,26 @@
+{
+  "uaeRealStateHubApp": {
+    "mapPoint": {
+      "home": {
+        "title": "Map Points",
+        "refreshListLabel": "Refresh list",
+        "createLabel": "Create a new Map Point",
+        "createOrEditLabel": "Create or edit a Map Point",
+        "notFound": "No Map Points found"
+      },
+      "created": "A new Map Point is created with identifier { param }",
+      "updated": "A Map Point is updated with identifier { param }",
+      "deleted": "A Map Point is deleted with identifier { param }",
+      "delete": {
+        "question": "Are you sure you want to delete Map Point { id }?"
+      },
+      "detail": {
+        "title": "Map Point"
+      },
+      "id": "ID",
+      "name": "Name",
+      "distanceKm": "Distance Km",
+      "property": "Property"
+    }
+  }
+}

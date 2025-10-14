@@ -1,0 +1,75 @@
+{
+  "annotations": {
+    "changelogDate": "20251006123721"
+  },
+  "applications": "*",
+  "dto": "mapstruct",
+  "fields": [
+    {
+      "fieldName": "extId",
+      "fieldType": "Long",
+      "fieldValidateRules": ["required", "unique"]
+    },
+    {
+      "fieldName": "area",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "completionDate",
+      "fieldType": "LocalDate"
+    },
+    {
+      "fieldName": "latitude",
+      "fieldType": "Double",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "longitude",
+      "fieldType": "Double",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "name",
+      "fieldType": "String",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "developer",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "status",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "saleStatus",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "minPrice",
+      "fieldType": "BigDecimal"
+    },
+    {
+      "fieldName": "coverUrl",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "coverJson",
+      "fieldType": "TextBlob"
+    }
+  ],
+  "jpaMetamodelFiltering": true,
+  "name": "PropertyMarker",
+  "pagination": "pagination",
+  "relationships": [
+    {
+      "otherEntityName": "property",
+      "otherEntityRelationshipName": "marker",
+      "relationshipName": "property",
+      "relationshipSide": "right",
+      "relationshipType": "one-to-one"
+    }
+  ],
+  "searchEngine": "no",
+  "service": "serviceClass"
+}

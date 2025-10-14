@@ -55,7 +55,7 @@ export default defineComponent({
 
     const initAuthorities = async () => {
       const response = await userManagementService.retrieveAuthorities();
-      authorities.value = response.data;
+      authorities.value = response.data.filter(role => role !== 'ROLE_VISITOR');
     };
 
     const loadUser = async (userId: string) => {

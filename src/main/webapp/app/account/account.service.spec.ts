@@ -73,17 +73,17 @@ describe('Account Service test suite', () => {
     accountService = new AccountService(store);
     await accountService.update();
 
-    return accountService.hasAnyAuthorityAndCheckAuth('USER').then((value: boolean) => {
+    return accountService.hasAnyAuthorityAndCheckAuth('ROLE_AGENT').then((value: boolean) => {
       expect(value).toBe(false);
     });
   });
 
   it('should init service and check for authority after retrieving account', async () => {
-    axiosStub.get.resolves({ status: 200, data: { authorities: ['USER'], langKey: 'en', login: 'ADMIN' } });
+    axiosStub.get.resolves({ status: 200, data: { authorities: ['ROLE_AGENT'], langKey: 'en', login: 'ADMIN' } });
     accountService = new AccountService(store);
     await accountService.update();
 
-    return accountService.hasAnyAuthorityAndCheckAuth('USER').then((value: boolean) => {
+    return accountService.hasAnyAuthorityAndCheckAuth('ROLE_AGENT').then((value: boolean) => {
       expect(value).toBe(true);
     });
   });
@@ -103,7 +103,7 @@ describe('Account Service test suite', () => {
     accountService = new AccountService(store);
     await accountService.update();
 
-    return accountService.hasAnyAuthorityAndCheckAuth('USER').then((value: boolean) => {
+    return accountService.hasAnyAuthorityAndCheckAuth('ROLE_AGENT').then((value: boolean) => {
       expect(value).toBe(false);
     });
   });

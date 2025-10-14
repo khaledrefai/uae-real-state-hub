@@ -1,3 +1,4 @@
+import axios from 'axios';
 import { type Ref, computed, defineComponent, inject, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 
@@ -7,7 +8,16 @@ import type AccountService from '@/account/account.service';
 import languages from '@/shared/config/languages';
 import EntitiesMenu from '@/entities/entities-menu.vue';
 
+import { useAlertService } from '@/shared/alert/alert.service';
 import { useStore } from '@/store';
+
+type PropertyRefreshResult = {
+  propertiesCreated: number;
+  propertiesUpdated: number;
+  propertiesSkipped: number;
+  markersCreated: number;
+  markersUpdated: number;
+};
 
 export default defineComponent({
   compatConfig: { MODE: 3 },
@@ -27,6 +37,7 @@ export default defineComponent({
 
     const router = useRouter();
     const store = useStore();
+    const alertService = useAlertService();
 
     const version = `v${APP_VERSION}`;
     const hasAnyAuthorityValues: Ref<any> = ref({});
@@ -34,6 +45,7 @@ export default defineComponent({
     const openAPIEnabled = computed(() => store.activeProfiles.indexOf('api-docs') > -1);
     const inProduction = computed(() => store.activeProfiles.indexOf('prod') > -1);
     const authenticated = computed(() => store.authenticated);
+    const reelyImporting = ref(false);
 
     const subIsActive = (input: string | string[]) => {
       const paths = Array.isArray(input) ? input : [input];
@@ -51,6 +63,28 @@ export default defineComponent({
       }
     };
 
+    const triggerReelyImport = async () => {
+      if (reelyImporting.value) {
+        return;
+      }
+
+      reelyImporting.value = true;
+      try {
+        const { data } = await axios.post<PropertyRefreshResult>('api/admin/reely/import');
+        alertService.showSuccess(
+          `Reely import finished. ${data.propertiesCreated} created, ${data.propertiesUpdated} updated, ${data.propertiesSkipped} skipped.`,
+        );
+      } catch (error: any) {
+        if (error?.response) {
+          alertService.showHttpError(error.response);
+        } else {
+          alertService.showError('Unable to trigger the Reely import. Please try again.');
+        }
+      } finally {
+        reelyImporting.value = false;
+      }
+    };
+
     return {
       logout,
       subIsActive,
@@ -65,6 +99,8 @@ export default defineComponent({
       openAPIEnabled,
       inProduction,
       authenticated,
+      triggerReelyImport,
+      reelyImporting,
       t$: useI18n().t,
     };
   },

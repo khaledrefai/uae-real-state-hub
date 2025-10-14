@@ -1,0 +1,33 @@
+{
+  "uaeRealStateHubApp": {
+    "agentProfile": {
+      "home": {
+        "title": "Agent Profiles",
+        "refreshListLabel": "Refresh list",
+        "createLabel": "Create a new Agent Profile",
+        "createOrEditLabel": "Create or edit a Agent Profile",
+        "notFound": "No Agent Profiles found"
+      },
+      "created": "A new Agent Profile is created with identifier { param }",
+      "updated": "A Agent Profile is updated with identifier { param }",
+      "deleted": "A Agent Profile is deleted with identifier { param }",
+      "delete": {
+        "question": "Are you sure you want to delete Agent Profile { id }?"
+      },
+      "detail": {
+        "title": "Agent Profile"
+      },
+      "id": "ID",
+      "externalUserId": "External User Id",
+      "fullName": "Full Name",
+      "companyName": "Company Name",
+      "email": "Email",
+      "phone": "Phone",
+      "whatsapp": "Whatsapp",
+      "country": "Country",
+      "city": "City",
+      "website": "Website",
+      "active": "Active"
+    }
+  }
+}

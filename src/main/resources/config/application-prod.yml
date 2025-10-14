@@ -31,17 +31,10 @@ spring:
       enabled: false
     livereload:
       enabled: false
-  datasource:
-    type: com.zaxxer.hikari.HikariDataSource
-    url: jdbc:postgresql://localhost:5432/uaeRealStateHub
-    username: uaeRealStateHub
-    password:
-    hikari:
-      poolName: Hikari
-      auto-commit: false
-  # Replace by 'prod, faker' to add the faker context and have sample data loaded in production
-  liquibase:
-    contexts: prod
+  data:
+    mongodb:
+      uri: ${SPRING_DATA_MONGODB_URI:mongodb://admin:Admin_2025%21@173.212.199.139:27017/propertieshub?authSource=admin}
+      database: propertieshub
   mail:
     host: localhost
     port: 25

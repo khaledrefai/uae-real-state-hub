@@ -1,0 +1,26 @@
+{
+  "uaeRealStateHubApp": {
+    "paymentPlan": {
+      "home": {
+        "title": "Payment Plans",
+        "refreshListLabel": "تحديث القائمة",
+        "createLabel": "إنشاء Payment Plan جديد",
+        "createOrEditLabel": "إنشاء أو تعديل Payment Plan",
+        "notFound": "لم يتم العثور على Payment Plans"
+      },
+      "created": "Payment Plan جديد تم إنشاؤه بالمعرف { param }",
+      "updated": "Payment Plan تم تحديثه بالمعرف { param }",
+      "deleted": "Payment Plan تم حذفه بالمعرف { param }",
+      "delete": {
+        "question": "هل أنت متأكد أنك تريد حذف Payment Plan { id }؟"
+      },
+      "detail": {
+        "title": "Payment Plan"
+      },
+      "id": "ID",
+      "name": "Name",
+      "monthsAfterHandover": "Months After Handover",
+      "property": "Property"
+    }
+  }
+}

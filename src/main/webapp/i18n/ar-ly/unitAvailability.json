@@ -1,0 +1,33 @@
+{
+  "uaeRealStateHubApp": {
+    "unitAvailability": {
+      "home": {
+        "title": "Unit Availabilities",
+        "refreshListLabel": "تحديث القائمة",
+        "createLabel": "إنشاء Unit Availability جديد",
+        "createOrEditLabel": "إنشاء أو تعديل Unit Availability",
+        "notFound": "لم يتم العثور على Unit Availabilities"
+      },
+      "created": "Unit Availability جديد تم إنشاؤه بالمعرف { param }",
+      "updated": "Unit Availability تم تحديثه بالمعرف { param }",
+      "deleted": "Unit Availability تم حذفه بالمعرف { param }",
+      "delete": {
+        "question": "هل أنت متأكد أنك تريد حذف Unit Availability { id }؟"
+      },
+      "detail": {
+        "title": "Unit Availability"
+      },
+      "id": "ID",
+      "buildingName": "Building Name",
+      "areaFrom": "Area From",
+      "areaUnit": "Area Unit",
+      "bedroomType": "Bedroom Type",
+      "lastUpdated": "Last Updated",
+      "priceCurrency": "Price Currency",
+      "priceFrom": "Price From",
+      "priceTo": "Price To",
+      "unitsAvailable": "Units Available",
+      "property": "Property"
+    }
+  }
+}

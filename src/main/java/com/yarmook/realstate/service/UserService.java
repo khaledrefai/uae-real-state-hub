@@ -20,14 +20,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import tech.jhipster.security.RandomUtil;
 
 /**
  * Service class for managing users.
  */
 @Service
-@Transactional
 public class UserService {
 
     private static final Logger LOG = LoggerFactory.getLogger(UserService.class);
@@ -38,10 +36,18 @@ public class UserService {
 
     private final AuthorityRepository authorityRepository;
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, AuthorityRepository authorityRepository) {
+    private final SequenceGeneratorService sequenceGeneratorService;
+
+    public UserService(
+        UserRepository userRepository,
+        PasswordEncoder passwordEncoder,
+        AuthorityRepository authorityRepository,
+        SequenceGeneratorService sequenceGeneratorService
+    ) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.authorityRepository = authorityRepository;
+        this.sequenceGeneratorService = sequenceGeneratorService;
     }
 
     public Optional<User> activateRegistration(String key) {
@@ -115,8 +121,11 @@ public class UserService {
         // new user gets registration key
         newUser.setActivationKey(RandomUtil.generateActivationKey());
         Set<Authority> authorities = new HashSet<>();
-        authorityRepository.findById(AuthoritiesConstants.USER).ifPresent(authorities::add);
+        authorityRepository.findById(AuthoritiesConstants.AGENT).ifPresent(authorities::add);
         newUser.setAuthorities(authorities);
+        if (newUser.getId() == null) {
+            newUser.setId(sequenceGeneratorService.generateSequence(User.SEQUENCE_NAME));
+        }
         userRepository.save(newUser);
         LOG.debug("Created Information for User: {}", newUser);
         return newUser;
@@ -127,7 +136,6 @@ public class UserService {
             return false;
         }
         userRepository.delete(existingUser);
-        userRepository.flush();
         return true;
     }
 
@@ -159,6 +167,9 @@ public class UserService {
                 .map(Optional::get)
                 .collect(Collectors.toSet());
             user.setAuthorities(authorities);
+        }
+        if (user.getId() == null) {
+            user.setId(sequenceGeneratorService.generateSequence(User.SEQUENCE_NAME));
         }
         userRepository.save(user);
         LOG.debug("Created Information for User: {}", user);
@@ -235,7 +246,6 @@ public class UserService {
             });
     }
 
-    @Transactional
     public void changePassword(String currentClearTextPassword, String newPassword) {
         SecurityUtils.getCurrentUserLogin()
             .flatMap(userRepository::findOneByLogin)
@@ -250,22 +260,18 @@ public class UserService {
             });
     }
 
-    @Transactional(readOnly = true)
     public Page<AdminUserDTO> getAllManagedUsers(Pageable pageable) {
         return userRepository.findAll(pageable).map(AdminUserDTO::new);
     }
 
-    @Transactional(readOnly = true)
     public Page<UserDTO> getAllPublicUsers(Pageable pageable) {
         return userRepository.findAllByIdNotNullAndActivatedIsTrue(pageable).map(UserDTO::new);
     }
 
-    @Transactional(readOnly = true)
     public Optional<User> getUserWithAuthoritiesByLogin(String login) {
         return userRepository.findOneWithAuthoritiesByLogin(login);
     }
 
-    @Transactional(readOnly = true)
     public Optional<User> getUserWithAuthorities() {
         return SecurityUtils.getCurrentUserLogin().flatMap(userRepository::findOneWithAuthoritiesByLogin);
     }
@@ -289,7 +295,6 @@ public class UserService {
      * Gets a list of all the authorities.
      * @return a list of all the authorities.
      */
-    @Transactional(readOnly = true)
     public List<String> getAuthorities() {
         return authorityRepository.findAll().stream().map(Authority::getName).toList();
     }

@@ -1,0 +1,26 @@
+services:
+  mongodb:
+    image: mongo:7.0
+    container_name: uaerealstatehub-mongodb
+    environment:
+      - 'MONGO_INITDB_ROOT_USERNAME=admin'
+      - 'MONGO_INITDB_ROOT_PASSWORD=Admin_2025!'
+      - 'MONGO_INITDB_DATABASE=propertieshub'
+    ports:
+      - 27017:27017
+    volumes:
+      - mongodb_data:/data/db
+    healthcheck:
+      test:
+        - CMD
+        - mongosh
+        - 'mongodb://admin:Admin_2025!@localhost:27017/admin'
+        - --quiet
+        - --eval
+        - 'db.adminCommand({ ping: 1 })'
+      interval: 10s
+      timeout: 5s
+      retries: 5
+volumes:
+  mongodb_data:
+    driver: local

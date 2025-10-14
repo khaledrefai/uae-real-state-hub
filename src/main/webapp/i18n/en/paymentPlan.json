@@ -1,0 +1,26 @@
+{
+  "uaeRealStateHubApp": {
+    "paymentPlan": {
+      "home": {
+        "title": "Payment Plans",
+        "refreshListLabel": "Refresh list",
+        "createLabel": "Create a new Payment Plan",
+        "createOrEditLabel": "Create or edit a Payment Plan",
+        "notFound": "No Payment Plans found"
+      },
+      "created": "A new Payment Plan is created with identifier { param }",
+      "updated": "A Payment Plan is updated with identifier { param }",
+      "deleted": "A Payment Plan is deleted with identifier { param }",
+      "delete": {
+        "question": "Are you sure you want to delete Payment Plan { id }?"
+      },
+      "detail": {
+        "title": "Payment Plan"
+      },
+      "id": "ID",
+      "name": "Name",
+      "monthsAfterHandover": "Months After Handover",
+      "property": "Property"
+    }
+  }
+}

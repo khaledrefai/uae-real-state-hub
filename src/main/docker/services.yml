@@ -1,10 +1,10 @@
 # This configuration is intended for development purpose, it's **your** responsibility to harden it for production
 name: uaerealstatehub
 services:
-  postgresql:
+  mongodb:
     extends:
-      file: ./postgresql.yml
-      service: postgresql
+      file: ./mongodb.yml
+      service: mongodb
     profiles:
       - ''
       - prod

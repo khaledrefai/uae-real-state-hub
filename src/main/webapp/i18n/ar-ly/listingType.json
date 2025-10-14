@@ -1,0 +1,10 @@
+{
+  "uaeRealStateHubApp": {
+    "ListingType": {
+      "null": "",
+      "SALE": "SALE",
+      "RENT": "RENT",
+      "OFF_PLAN": "OFF_PLAN"
+    }
+  }
+}

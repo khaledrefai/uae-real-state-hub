@@ -1,0 +1,167 @@
+{
+  "annotations": {
+    "changelogDate": "20251006123720"
+  },
+  "applications": "*",
+  "dto": "mapstruct",
+  "fields": [
+    {
+      "fieldName": "extId",
+      "fieldType": "Long",
+      "fieldValidateRules": ["required", "unique"]
+    },
+    {
+      "fieldName": "slug",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "name",
+      "fieldType": "String",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "developer",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "area",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "city",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "country",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "listingType",
+      "fieldType": "ListingType",
+      "fieldValues": "SALE,RENT,OFF_PLAN"
+    },
+    {
+      "fieldName": "status",
+      "fieldType": "PropertyStatus",
+      "fieldValues": "Presale,Available,Sold,Rented,Withdrawn,Draft"
+    },
+    {
+      "fieldName": "saleStatus",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "readiness",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "serviceCharge",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "furnishing",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "hasEscrow",
+      "fieldType": "Boolean"
+    },
+    {
+      "fieldName": "postHandover",
+      "fieldType": "Boolean"
+    },
+    {
+      "fieldName": "completionDateTime",
+      "fieldType": "Instant"
+    },
+    {
+      "fieldName": "minPrice",
+      "fieldType": "BigDecimal"
+    },
+    {
+      "fieldName": "maxPrice",
+      "fieldType": "BigDecimal"
+    },
+    {
+      "fieldName": "minPriceAed",
+      "fieldType": "BigDecimal"
+    },
+    {
+      "fieldName": "priceCurrency",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "minArea",
+      "fieldType": "Double"
+    },
+    {
+      "fieldName": "maxArea",
+      "fieldType": "Double"
+    },
+    {
+      "fieldName": "areaUnit",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "latitude",
+      "fieldType": "Double"
+    },
+    {
+      "fieldName": "longitude",
+      "fieldType": "Double"
+    },
+    {
+      "fieldName": "coverUrl",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "coverJson",
+      "fieldType": "TextBlob"
+    },
+    {
+      "fieldName": "videoUrl",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "brochureUrl",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "layoutsPdfUrl",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "website",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "overviewMd",
+      "fieldType": "TextBlob"
+    },
+    {
+      "fieldName": "raw",
+      "fieldType": "TextBlob"
+    },
+    {
+      "fieldName": "publishedAt",
+      "fieldType": "Instant"
+    },
+    {
+      "fieldName": "updatedAt",
+      "fieldType": "Instant"
+    }
+  ],
+  "jpaMetamodelFiltering": true,
+  "name": "Property",
+  "pagination": "pagination",
+  "relationships": [
+    {
+      "otherEntityName": "propertyMarker",
+      "otherEntityRelationshipName": "property",
+      "relationshipName": "marker",
+      "relationshipSide": "left",
+      "relationshipType": "one-to-one"
+    }
+  ],
+  "searchEngine": "no",
+  "service": "serviceClass"
+}

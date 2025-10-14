@@ -1,0 +1,10 @@
+{
+  "uaeRealStateHubApp": {
+    "Currency": {
+      "null": "",
+      "AED": "AED",
+      "USD": "USD",
+      "EUR": "EUR"
+    }
+  }
+}

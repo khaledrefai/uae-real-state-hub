@@ -1,12 +1,12 @@
 package com.yarmook.realstate.repository;
 
 import com.yarmook.realstate.domain.Authority;
-import org.springframework.data.jpa.repository.*;
+import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
 /**
- * Spring Data JPA repository for the Authority entity.
+ * Spring Data MongoDB repository for the Authority entity.
  */
 @SuppressWarnings("unused")
 @Repository
-public interface AuthorityRepository extends JpaRepository<Authority, String> {}
+public interface AuthorityRepository extends MongoRepository<Authority, String> {}

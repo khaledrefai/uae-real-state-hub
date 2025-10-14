@@ -1,0 +1,65 @@
+{
+  "annotations": {
+    "changelogDate": "20251006123722"
+  },
+  "applications": "*",
+  "dto": "mapstruct",
+  "fields": [
+    {
+      "fieldName": "kind",
+      "fieldType": "MediaKind",
+      "fieldValidateRules": ["required"],
+      "fieldValues": "COVER,ARCHITECTURE,INTERIOR,LOBBY,MASTER_PLAN,TYPICAL_UNIT,DOCUMENT"
+    },
+    {
+      "fieldName": "url",
+      "fieldType": "String",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "mimeType",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "width",
+      "fieldType": "Integer"
+    },
+    {
+      "fieldName": "height",
+      "fieldType": "Integer"
+    },
+    {
+      "fieldName": "mediaSize",
+      "fieldType": "Long"
+    },
+    {
+      "fieldName": "source",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "title",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "altText",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "sortOrder",
+      "fieldType": "Integer"
+    }
+  ],
+  "jpaMetamodelFiltering": true,
+  "name": "MediaAsset",
+  "pagination": "pagination",
+  "relationships": [
+    {
+      "otherEntityName": "property",
+      "relationshipName": "property",
+      "relationshipSide": "left",
+      "relationshipType": "many-to-one"
+    }
+  ],
+  "searchEngine": "no",
+  "service": "serviceClass"
+}

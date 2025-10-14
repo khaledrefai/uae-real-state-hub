@@ -1,0 +1,32 @@
+{
+  "uaeRealStateHubApp": {
+    "subscriptionPlan": {
+      "home": {
+        "title": "Subscription Plans",
+        "refreshListLabel": "تحديث القائمة",
+        "createLabel": "إنشاء Subscription Plan جديد",
+        "createOrEditLabel": "إنشاء أو تعديل Subscription Plan",
+        "notFound": "لم يتم العثور على Subscription Plans"
+      },
+      "created": "Subscription Plan جديد تم إنشاؤه بالمعرف { param }",
+      "updated": "Subscription Plan تم تحديثه بالمعرف { param }",
+      "deleted": "Subscription Plan تم حذفه بالمعرف { param }",
+      "delete": {
+        "question": "هل أنت متأكد أنك تريد حذف Subscription Plan { id }؟"
+      },
+      "detail": {
+        "title": "Subscription Plan"
+      },
+      "id": "ID",
+      "code": "Code",
+      "name": "Name",
+      "priceMonthly": "Price Monthly",
+      "priceYearly": "Price Yearly",
+      "currency": "Currency",
+      "stripePriceMonthlyId": "Stripe Price Monthly Id",
+      "stripePriceYearlyId": "Stripe Price Yearly Id",
+      "maxListings": "Max Listings",
+      "features": "Features"
+    }
+  }
+}

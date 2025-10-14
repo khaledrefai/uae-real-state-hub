@@ -1,17 +1,17 @@
 package com.yarmook.realstate.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import java.io.Serializable;
 import java.util.Objects;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Persistable;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 /**
  * A Authority.
  */
-@Entity
-@Table(name = "jhi_authority")
+@Document(collection = "jhi_authority")
 @JsonIgnoreProperties(value = { "new", "id" })
 @SuppressWarnings("common-java:DuplicatedBlocks")
 public class Authority implements Serializable, Persistable<String> {
@@ -21,12 +21,7 @@ public class Authority implements Serializable, Persistable<String> {
     @NotNull
     @Size(max = 50)
     @Id
-    @Column(name = "name", length = 50, nullable = false)
     private String name;
-
-    @org.springframework.data.annotation.Transient
-    @Transient
-    private boolean isPersisted;
 
     // jhipster-needle-entity-add-field - JHipster will add fields here
 
@@ -43,27 +38,14 @@ public class Authority implements Serializable, Persistable<String> {
         this.name = name;
     }
 
-    @PostLoad
-    @PostPersist
-    public void updateEntityState() {
-        this.setIsPersisted();
-    }
-
     @Override
     public String getId() {
         return this.name;
     }
 
-    @org.springframework.data.annotation.Transient
-    @Transient
     @Override
     public boolean isNew() {
-        return !this.isPersisted;
-    }
-
-    public Authority setIsPersisted() {
-        this.isPersisted = true;
-        return this;
+        return this.name == null;
     }
 
     // jhipster-needle-entity-add-getters-setters - JHipster will add getters and setters here

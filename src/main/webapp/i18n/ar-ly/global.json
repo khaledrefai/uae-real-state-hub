@@ -7,7 +7,21 @@
       "jhipster-needle-menu-add-element": "JHipster will add additional menu entries here (do not translate!)",
       "entities": {
         "main": "الكيانات",
-        "jhipster-needle-menu-add-entry": "JHipster will add additional entities here (do not translate!)"
+        "jhipster-needle-menu-add-entry": "JHipster will add additional entities here (do not translate!)",
+        "agentProfile": "Agent Profile",
+        "agentSite": "Agent Site",
+        "subscriptionPlan": "Subscription Plan",
+        "billingSubscription": "Billing Subscription",
+        "property": "Property",
+        "propertyMarker": "Property Marker",
+        "mediaAsset": "Media Asset",
+        "facility": "Facility",
+        "mapPoint": "Map Point",
+        "paymentPlan": "Payment Plan",
+        "paymentPlanItem": "Payment Plan Item",
+        "unitAvailability": "Unit Availability",
+        "unitBlock": "Unit Block",
+        "contactLead": "Contact Lead"
       },
       "account": {
         "main": "الحساب",
@@ -26,6 +40,9 @@
         "health": "الصحة",
         "configuration": "الإعدادات",
         "logs": "السجلات",
+        "import": "Import data",
+        "reelySync": "Sync Reely data",
+        "reelySyncInProgress": "Syncing...",
         "apidocs": "API",
         "database": "قاعدة البيانات",
         "jhipster-needle-menu-add-admin-element": "JHipster will add additional menu entries here (do not translate!)"

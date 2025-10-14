@@ -1,0 +1,36 @@
+{
+  "uaeRealStateHubApp": {
+    "propertyMarker": {
+      "home": {
+        "title": "Property Markers",
+        "refreshListLabel": "تحديث القائمة",
+        "createLabel": "إنشاء Property Marker جديد",
+        "createOrEditLabel": "إنشاء أو تعديل Property Marker",
+        "notFound": "لم يتم العثور على Property Markers"
+      },
+      "created": "Property Marker جديد تم إنشاؤه بالمعرف { param }",
+      "updated": "Property Marker تم تحديثه بالمعرف { param }",
+      "deleted": "Property Marker تم حذفه بالمعرف { param }",
+      "delete": {
+        "question": "هل أنت متأكد أنك تريد حذف Property Marker { id }؟"
+      },
+      "detail": {
+        "title": "Property Marker"
+      },
+      "id": "ID",
+      "extId": "Ext Id",
+      "area": "Area",
+      "completionDate": "Completion Date",
+      "latitude": "Latitude",
+      "longitude": "Longitude",
+      "name": "Name",
+      "developer": "Developer",
+      "status": "Status",
+      "saleStatus": "Sale Status",
+      "minPrice": "Min Price",
+      "coverUrl": "Cover Url",
+      "coverJson": "Cover Json",
+      "property": "Property"
+    }
+  }
+}

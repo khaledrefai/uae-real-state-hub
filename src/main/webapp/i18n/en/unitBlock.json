@@ -1,0 +1,38 @@
+{
+  "uaeRealStateHubApp": {
+    "unitBlock": {
+      "home": {
+        "title": "Unit Blocks",
+        "refreshListLabel": "Refresh list",
+        "createLabel": "Create a new Unit Block",
+        "createOrEditLabel": "Create or edit a Unit Block",
+        "notFound": "No Unit Blocks found"
+      },
+      "created": "A new Unit Block is created with identifier { param }",
+      "updated": "A Unit Block is updated with identifier { param }",
+      "deleted": "A Unit Block is deleted with identifier { param }",
+      "delete": {
+        "question": "Are you sure you want to delete Unit Block { id }?"
+      },
+      "detail": {
+        "title": "Unit Block"
+      },
+      "id": "ID",
+      "normalizedType": "Normalized Type",
+      "unitType": "Unit Type",
+      "bedroomsAmount": "Bedrooms Amount",
+      "unitBedrooms": "Unit Bedrooms",
+      "areaUnit": "Area Unit",
+      "unitsAmount": "Units Amount",
+      "unitsAreaFrom": "Units Area From",
+      "unitsAreaTo": "Units Area To",
+      "unitsAreaFromM2": "Units Area From M 2",
+      "unitsAreaToM2": "Units Area To M 2",
+      "unitsPriceFrom": "Units Price From",
+      "unitsPriceTo": "Units Price To",
+      "priceCurrency": "Price Currency",
+      "typicalImageUrl": "Typical Image Url",
+      "property": "Property"
+    }
+  }
+}

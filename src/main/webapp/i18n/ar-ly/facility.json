@@ -1,0 +1,27 @@
+{
+  "uaeRealStateHubApp": {
+    "facility": {
+      "home": {
+        "title": "Facilities",
+        "refreshListLabel": "تحديث القائمة",
+        "createLabel": "إنشاء Facility جديد",
+        "createOrEditLabel": "إنشاء أو تعديل Facility",
+        "notFound": "لم يتم العثور على Facilities"
+      },
+      "created": "Facility جديد تم إنشاؤه بالمعرف { param }",
+      "updated": "Facility تم تحديثه بالمعرف { param }",
+      "deleted": "Facility تم حذفه بالمعرف { param }",
+      "delete": {
+        "question": "هل أنت متأكد أنك تريد حذف Facility { id }؟"
+      },
+      "detail": {
+        "title": "Facility"
+      },
+      "id": "ID",
+      "name": "Name",
+      "source": "Source",
+      "imageUrl": "Image Url",
+      "property": "Property"
+    }
+  }
+}

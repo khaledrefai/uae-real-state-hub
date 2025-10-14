@@ -1,0 +1,13 @@
+{
+  "uaeRealStateHubApp": {
+    "PropertyStatus": {
+      "null": "",
+      "Presale": "Presale",
+      "Available": "Available",
+      "Sold": "Sold",
+      "Rented": "Rented",
+      "Withdrawn": "Withdrawn",
+      "Draft": "Draft"
+    }
+  }
+}

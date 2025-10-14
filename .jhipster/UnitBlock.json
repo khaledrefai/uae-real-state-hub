@@ -1,0 +1,78 @@
+{
+  "annotations": {
+    "changelogDate": "20251006123728"
+  },
+  "applications": "*",
+  "dto": "mapstruct",
+  "fields": [
+    {
+      "fieldName": "normalizedType",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "unitType",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "bedroomsAmount",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "unitBedrooms",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "areaUnit",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "unitsAmount",
+      "fieldType": "Integer"
+    },
+    {
+      "fieldName": "unitsAreaFrom",
+      "fieldType": "Double"
+    },
+    {
+      "fieldName": "unitsAreaTo",
+      "fieldType": "Double"
+    },
+    {
+      "fieldName": "unitsAreaFromM2",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "unitsAreaToM2",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "unitsPriceFrom",
+      "fieldType": "BigDecimal"
+    },
+    {
+      "fieldName": "unitsPriceTo",
+      "fieldType": "BigDecimal"
+    },
+    {
+      "fieldName": "priceCurrency",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "typicalImageUrl",
+      "fieldType": "String"
+    }
+  ],
+  "jpaMetamodelFiltering": true,
+  "name": "UnitBlock",
+  "pagination": "pagination",
+  "relationships": [
+    {
+      "otherEntityName": "property",
+      "relationshipName": "property",
+      "relationshipSide": "left",
+      "relationshipType": "many-to-one"
+    }
+  ],
+  "searchEngine": "no",
+  "service": "serviceClass"
+}

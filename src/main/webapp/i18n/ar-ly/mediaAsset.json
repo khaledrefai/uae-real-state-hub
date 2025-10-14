@@ -1,0 +1,34 @@
+{
+  "uaeRealStateHubApp": {
+    "mediaAsset": {
+      "home": {
+        "title": "Media Assets",
+        "refreshListLabel": "تحديث القائمة",
+        "createLabel": "إنشاء Media Asset جديد",
+        "createOrEditLabel": "إنشاء أو تعديل Media Asset",
+        "notFound": "لم يتم العثور على Media Assets"
+      },
+      "created": "Media Asset جديد تم إنشاؤه بالمعرف { param }",
+      "updated": "Media Asset تم تحديثه بالمعرف { param }",
+      "deleted": "Media Asset تم حذفه بالمعرف { param }",
+      "delete": {
+        "question": "هل أنت متأكد أنك تريد حذف Media Asset { id }؟"
+      },
+      "detail": {
+        "title": "Media Asset"
+      },
+      "id": "ID",
+      "kind": "Kind",
+      "url": "Url",
+      "mimeType": "Mime Type",
+      "width": "Width",
+      "height": "Height",
+      "mediaSize": "Media Size",
+      "source": "Source",
+      "title": "Title",
+      "altText": "Alt Text",
+      "sortOrder": "Sort Order",
+      "property": "Property"
+    }
+  }
+}

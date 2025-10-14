@@ -1,0 +1,59 @@
+{
+  "annotations": {
+    "changelogDate": "20251006123727"
+  },
+  "applications": "*",
+  "dto": "mapstruct",
+  "fields": [
+    {
+      "fieldName": "buildingName",
+      "fieldType": "String",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "areaFrom",
+      "fieldType": "Double"
+    },
+    {
+      "fieldName": "areaUnit",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "bedroomType",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "lastUpdated",
+      "fieldType": "Instant"
+    },
+    {
+      "fieldName": "priceCurrency",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "priceFrom",
+      "fieldType": "BigDecimal"
+    },
+    {
+      "fieldName": "priceTo",
+      "fieldType": "BigDecimal"
+    },
+    {
+      "fieldName": "unitsAvailable",
+      "fieldType": "Integer"
+    }
+  ],
+  "jpaMetamodelFiltering": true,
+  "name": "UnitAvailability",
+  "pagination": "pagination",
+  "relationships": [
+    {
+      "otherEntityName": "property",
+      "relationshipName": "property",
+      "relationshipSide": "left",
+      "relationshipType": "many-to-one"
+    }
+  ],
+  "searchEngine": "no",
+  "service": "serviceClass"
+}

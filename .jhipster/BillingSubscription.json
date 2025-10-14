@@ -1,0 +1,53 @@
+{
+  "annotations": {
+    "changelogDate": "20251006123719"
+  },
+  "applications": "*",
+  "dto": "mapstruct",
+  "fields": [
+    {
+      "fieldName": "status",
+      "fieldType": "String",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "startDate",
+      "fieldType": "Instant",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "endDate",
+      "fieldType": "Instant"
+    },
+    {
+      "fieldName": "stripeCustomerId",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "stripeSubscriptionId",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "cancelAtPeriodEnd",
+      "fieldType": "Boolean"
+    },
+    {
+      "fieldName": "isActive",
+      "fieldType": "Boolean",
+      "fieldValidateRules": ["required"]
+    }
+  ],
+  "jpaMetamodelFiltering": true,
+  "name": "BillingSubscription",
+  "pagination": "pagination",
+  "relationships": [
+    {
+      "otherEntityName": "agentSite",
+      "relationshipName": "site",
+      "relationshipSide": "left",
+      "relationshipType": "many-to-one"
+    }
+  ],
+  "searchEngine": "no",
+  "service": "serviceClass"
+}

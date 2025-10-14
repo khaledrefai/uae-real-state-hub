@@ -1,0 +1,34 @@
+{
+  "uaeRealStateHubApp": {
+    "contactLead": {
+      "home": {
+        "title": "Contact Leads",
+        "refreshListLabel": "Refresh list",
+        "createLabel": "Create a new Contact Lead",
+        "createOrEditLabel": "Create or edit a Contact Lead",
+        "notFound": "No Contact Leads found"
+      },
+      "created": "A new Contact Lead is created with identifier { param }",
+      "updated": "A Contact Lead is updated with identifier { param }",
+      "deleted": "A Contact Lead is deleted with identifier { param }",
+      "delete": {
+        "question": "Are you sure you want to delete Contact Lead { id }?"
+      },
+      "detail": {
+        "title": "Contact Lead"
+      },
+      "id": "ID",
+      "name": "Name",
+      "email": "Email",
+      "phone": "Phone",
+      "whatsapp": "Whatsapp",
+      "message": "Message",
+      "source": "Source",
+      "utm": "Utm",
+      "createdAt": "Created At",
+      "status": "Status",
+      "site": "Site",
+      "property": "Property"
+    }
+  }
+}

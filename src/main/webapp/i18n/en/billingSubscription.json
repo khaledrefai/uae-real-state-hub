@@ -1,0 +1,31 @@
+{
+  "uaeRealStateHubApp": {
+    "billingSubscription": {
+      "home": {
+        "title": "Billing Subscriptions",
+        "refreshListLabel": "Refresh list",
+        "createLabel": "Create a new Billing Subscription",
+        "createOrEditLabel": "Create or edit a Billing Subscription",
+        "notFound": "No Billing Subscriptions found"
+      },
+      "created": "A new Billing Subscription is created with identifier { param }",
+      "updated": "A Billing Subscription is updated with identifier { param }",
+      "deleted": "A Billing Subscription is deleted with identifier { param }",
+      "delete": {
+        "question": "Are you sure you want to delete Billing Subscription { id }?"
+      },
+      "detail": {
+        "title": "Billing Subscription"
+      },
+      "id": "ID",
+      "status": "Status",
+      "startDate": "Start Date",
+      "endDate": "End Date",
+      "stripeCustomerId": "Stripe Customer Id",
+      "stripeSubscriptionId": "Stripe Subscription Id",
+      "cancelAtPeriodEnd": "Cancel At Period End",
+      "isActive": "Is Active",
+      "site": "Site"
+    }
+  }
+}
