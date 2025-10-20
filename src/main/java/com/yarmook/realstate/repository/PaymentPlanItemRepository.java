@@ -1,6 +1,8 @@
 package com.yarmook.realstate.repository;
 
 import com.yarmook.realstate.domain.PaymentPlanItem;
+import java.util.Collection;
+import java.util.List;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
@@ -9,4 +11,6 @@ import org.springframework.stereotype.Repository;
  */
 @SuppressWarnings("unused")
 @Repository
-public interface PaymentPlanItemRepository extends MongoRepository<PaymentPlanItem, Long> {}
+public interface PaymentPlanItemRepository extends MongoRepository<PaymentPlanItem, Long> {
+    List<PaymentPlanItem> findAllByPlan_IdIn(Collection<Long> planIds);
+}

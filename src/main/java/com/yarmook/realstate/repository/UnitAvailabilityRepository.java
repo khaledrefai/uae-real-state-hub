@@ -1,6 +1,7 @@
 package com.yarmook.realstate.repository;
 
 import com.yarmook.realstate.domain.UnitAvailability;
+import java.util.List;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
@@ -9,4 +10,6 @@ import org.springframework.stereotype.Repository;
  */
 @SuppressWarnings("unused")
 @Repository
-public interface UnitAvailabilityRepository extends MongoRepository<UnitAvailability, Long> {}
+public interface UnitAvailabilityRepository extends MongoRepository<UnitAvailability, Long> {
+    List<UnitAvailability> findAllByProperty_Id(Long propertyId);
+}

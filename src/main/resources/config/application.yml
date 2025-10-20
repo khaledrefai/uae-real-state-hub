@@ -211,3 +211,21 @@ application:
       properties-path: /properties
       property-markers-path: /property-markers
       page-size: 250
+  ai:
+    enabled: ${AI_FEATURE_ENABLED:true}
+    openai:
+      api-key: ${OPENAI_API_KEY:}
+      base-url: ${OPENAI_BASE_URL:https://api.openai.com/v1}
+      embeddings-model: ${OPENAI_EMBEDDINGS_MODEL:text-embedding-3-small}
+      chat-model: ${OPENAI_CHAT_MODEL:gpt-4o-mini}
+      temperature: ${OPENAI_CHAT_TEMPERATURE:0.2}
+    qdrant:
+      url: ${QDRANT_URL:http://localhost:6333}
+      api-key: ${QDRANT_API_KEY:}
+      collection: ${QDRANT_COLLECTION:reelly}
+      batch-size: ${QDRANT_BATCH_SIZE:32}
+      search-limit: ${QDRANT_SEARCH_LIMIT:12}
+    indexer:
+      enabled: ${AI_INDEXER_ENABLED:true}
+      cron: ${AI_INDEXER_CRON:0 0 3 * * *}
+      page-size: ${AI_INDEXER_PAGE_SIZE:50}

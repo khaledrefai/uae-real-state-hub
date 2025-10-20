@@ -1,0 +1,295 @@
+<template>
+  <section class="ai-assistant card shadow-sm">
+    <header class="card-header d-flex justify-content-between align-items-center">
+      <div>
+        <h2 class="h5 mb-0">AI Property Assistant</h2>
+        <small class="text-muted">Use catalogue insights to answer customer questions instantly.</small>
+      </div>
+      <button class="btn btn-outline-secondary btn-sm" type="button" @click="resetConversation" :disabled="loading">Reset</button>
+    </header>
+
+    <div class="chat-card-body">
+      <div ref="scrollContainer" class="chat-thread">
+        <div v-for="message in messages" :key="message.id" :class="['chat-item', message.role]">
+          <div class="chat-bubble">
+            <p v-for="(paragraph, index) in normalizeContent(message.content)" :key="`${message.id}-${index}`">
+              {{ paragraph }}
+            </p>
+          </div>
+        </div>
+        <div v-if="loading" class="chat-item assistant">
+          <div class="chat-bubble chat-loading">
+            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+            <span class="ml-2">Consulting our listings…</span>
+          </div>
+        </div>
+      </div>
+
+      <aside v-if="contextEntries.length" class="chat-context">
+        <h3 class="h6 text-uppercase text-muted">Referenced properties</h3>
+        <ul class="list-unstyled mb-0">
+          <li v-for="property in contextEntries" :key="property.extId ?? property.propertyId" class="context-row">
+            <button class="btn btn-link p-0 text-left" type="button" @click="openProperty(property)">
+              <strong>{{ property.name ?? 'Property' }}</strong>
+            </button>
+            <div class="text-muted small">
+              {{ [property.area, property.city].filter(Boolean).join(', ') || 'Location TBD' }}
+            </div>
+            <div v-if="property.priceRange" class="small text-primary mt-1">{{ property.priceRange }}</div>
+            <ul v-if="property.keyPoints?.length" class="small text-muted pl-3 mb-1">
+              <li v-for="(bullet, bulletIndex) in property.keyPoints.slice(0, 2)" :key="bulletIndex">{{ bullet }}</li>
+            </ul>
+          </li>
+        </ul>
+      </aside>
+    </div>
+
+    <footer class="card-footer">
+      <form class="chat-form" @submit.prevent="sendMessage">
+        <div class="form-group mb-2">
+          <label class="sr-only" for="agentChatInput">Ask the assistant</label>
+          <textarea
+            id="agentChatInput"
+            ref="inputRef"
+            v-model="draft"
+            class="form-control"
+            rows="3"
+            placeholder="Try: Summarise latest availability for Downtown Dubai 2BR units"
+            :disabled="loading"
+            @keydown.enter.exact.prevent="sendMessage"
+          ></textarea>
+        </div>
+        <div class="d-flex justify-content-between align-items-center">
+          <span v-if="error" class="text-danger small">{{ error }}</span>
+          <button class="btn btn-primary" type="submit" :disabled="loading || !readyToSend">Send</button>
+        </div>
+      </form>
+    </footer>
+  </section>
+</template>
+
+<script setup lang="ts">
+import axios from 'axios';
+import { computed, nextTick, onMounted, ref } from 'vue';
+import { useRouter } from 'vue-router';
+
+import { useAgentSiteStore, usePropertyCatalogStore } from '@/store';
+
+interface ChatMessage {
+  id: number;
+  role: 'assistant' | 'user';
+  content: string;
+}
+
+interface BackendPropertyContext {
+  propertyId?: number | null;
+  extId?: number | null;
+  name?: string | null;
+  developer?: string | null;
+  area?: string | null;
+  city?: string | null;
+  country?: string | null;
+  status?: string | null;
+  priceRange?: string | null;
+  unitsRange?: string | null;
+  score?: number | null;
+  keyPoints?: string[];
+}
+
+interface BackendChatResponse {
+  answer: string;
+  context: BackendPropertyContext[];
+}
+
+const router = useRouter();
+const propertyStore = usePropertyCatalogStore();
+const agentSiteStore = useAgentSiteStore();
+
+const messages = ref<ChatMessage[]>([
+  {
+    id: 0,
+    role: 'assistant',
+    content: 'Need a quick customer reply? Ask about pricing, availability, or nearby amenities.',
+  },
+]);
+const contextEntries = ref<BackendPropertyContext[]>([]);
+const draft = ref('');
+const loading = ref(false);
+const error = ref('');
+const counter = ref(1);
+
+const scrollContainer = ref<HTMLDivElement | null>(null);
+const inputRef = ref<HTMLTextAreaElement | null>(null);
+
+const readyToSend = computed(() => draft.value.trim().length > 0);
+const siteSlug = computed(() => agentSiteStore.site?.slug ?? '');
+
+const normalizeContent = (value: string): string[] =>
+  value
+    .split(/\n+/)
+    .map(line => line.trim())
+    .filter(Boolean);
+
+const focusInput = () => {
+  nextTick(() => {
+    inputRef.value?.focus();
+  });
+};
+
+onMounted(() => focusInput());
+
+const scrollToBottom = () => {
+  nextTick(() => {
+    const container = scrollContainer.value;
+    if (container) {
+      container.scrollTop = container.scrollHeight;
+    }
+  });
+};
+
+const appendMessage = (message: Omit<ChatMessage, 'id'>) => {
+  messages.value.push({ ...message, id: counter.value++ });
+  scrollToBottom();
+};
+
+const sendMessage = async () => {
+  if (!readyToSend.value || loading.value) {
+    return;
+  }
+  const content = draft.value.trim();
+  draft.value = '';
+  error.value = '';
+
+  appendMessage({ role: 'user', content });
+
+  try {
+    loading.value = true;
+    const { data } = await axios.post<BackendChatResponse>('api/chat', { message: content });
+    appendMessage({ role: 'assistant', content: data?.answer ?? 'No response available.' });
+    contextEntries.value = Array.isArray(data?.context) ? data.context : [];
+  } catch (e) {
+    error.value = 'Unable to reach the assistant.';
+    appendMessage({
+      role: 'assistant',
+      content: 'We could not retrieve insights right now. Please try again shortly.',
+    });
+    console.error('Agent AI chat failed', e);
+  } finally {
+    loading.value = false;
+    focusInput();
+  }
+};
+
+const openProperty = (property: BackendPropertyContext) => {
+  const slug = siteSlug.value;
+  if (!slug) {
+    return;
+  }
+  const propertyId =
+    property.propertyId ?? propertyStore.items.find(item => typeof item.extId === 'number' && item.extId === property.extId)?.id ?? null;
+
+  if (propertyId) {
+    router.push(`/store/${slug}/properties/${propertyId}`);
+  }
+};
+
+const resetConversation = () => {
+  messages.value = [
+    {
+      id: 0,
+      role: 'assistant',
+      content: 'Need a quick customer reply? Ask about pricing, availability, or nearby amenities.',
+    },
+  ];
+  contextEntries.value = [];
+  draft.value = '';
+  error.value = '';
+  counter.value = 1;
+  focusInput();
+};
+</script>
+
+<style scoped>
+.ai-assistant {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.chat-card-body {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: 1.5rem;
+  padding: 1.5rem;
+}
+
+.chat-thread {
+  max-height: 360px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.chat-item {
+  display: flex;
+}
+
+.chat-item.user {
+  justify-content: flex-end;
+}
+
+.chat-item.assistant {
+  justify-content: flex-start;
+}
+
+.chat-bubble {
+  max-width: 90%;
+  padding: 0.9rem 1.1rem;
+  border-radius: 0.9rem;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: #f8fafc;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.chat-item.user .chat-bubble {
+  background: rgba(49, 130, 206, 0.08);
+  border-color: rgba(49, 130, 206, 0.35);
+}
+
+.chat-loading {
+  display: inline-flex;
+  align-items: center;
+}
+
+.chat-context {
+  border-left: 1px solid rgba(148, 163, 184, 0.2);
+  padding-left: 1.5rem;
+  overflow-y: auto;
+}
+
+.context-row + .context-row {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(148, 163, 184, 0.15);
+}
+
+.chat-form {
+  margin-bottom: 0;
+}
+
+@media (max-width: 992px) {
+  .chat-card-body {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .chat-context {
+    border-left: none;
+    border-top: 1px solid rgba(148, 163, 184, 0.2);
+    padding-left: 0;
+    padding-top: 1rem;
+  }
+}
+</style>

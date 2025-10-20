@@ -84,6 +84,16 @@ Note: There are still a few other things remaining to do for Leaflet that we won
 
 For further instructions on how to develop with JHipster, have a look at [Using JHipster in development][].
 
+### AI Assistant
+
+This project includes an AI-powered assistant that indexes property content into Qdrant and exposes a retrieval-augmented chat API.
+
+1. **Services** – run MongoDB (existing dependency), a Qdrant instance (`http://localhost:6333` by default) with a `reelly` collection sized for 1536-dimension vectors, and an OpenAI-compatible API endpoint.
+2. **Configuration** – set the new environment variables listed in `.env.example` (`OPENAI_*`, `QDRANT_*`, `AI_*`) in your runtime environment or `.env` file.
+3. **Indexing** – the scheduled indexer runs daily at 03:00 server time (`application.ai.indexer.cron`). Trigger a full rebuild manually by invoking `PropertyEmbeddingService#reindexAllProperties()`.
+4. **API** – query the assistant with `POST /api/chat` `{ "message": "..." }`. The response contains both the generated answer and the structured property context used.
+5. **Front-end** – the storefront (`/store/:slug`) now shows a floating “Ask AI” button, and the agent dashboard exposes an “AI Assistant” tab for internal use.
+
 ## Building for production
 
 ### Packaging as jar

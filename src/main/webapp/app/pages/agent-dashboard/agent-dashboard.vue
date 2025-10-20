@@ -1,4 +1,3 @@
-zx
 <template>
   <div class="agent-dashboard container py-4">
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
@@ -211,6 +210,10 @@ zx
       </div>
     </section>
 
+    <section v-if="activeTab === 'assistant'">
+      <ai-assistant-panel />
+    </section>
+
     <section v-if="activeTab === 'billing'">
       <div class="card shadow-sm mb-4">
         <div class="card-header">
@@ -392,6 +395,7 @@ import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import { computed, onMounted, reactive, ref, watch } from 'vue';
 
+import AiAssistantPanel from '@/components/ai-assistant-panel.vue';
 import { useAgentSiteStore, useBillingStore, usePropertyCatalogStore, useStore as useAccountStore } from '@/store';
 import type { IAgentProfile } from '@/shared/model/agent-profile.model';
 import type { IContactLead } from '@/shared/model/contact-lead.model';
@@ -411,11 +415,12 @@ const accountStore = useAccountStore();
 const alertService = useAlertService();
 const { upload: uploadAsset, uploading: uploadingLogo } = useSupabaseStorage();
 
-const activeTab = ref<'overview' | 'branding' | 'properties' | 'billing'>('overview');
+const activeTab = ref<'overview' | 'branding' | 'properties' | 'assistant' | 'billing'>('overview');
 const tabs = [
   { id: 'overview' as const, label: 'Overview' },
   { id: 'branding' as const, label: 'Branding' },
   { id: 'properties' as const, label: 'Properties' },
+  { id: 'assistant' as const, label: 'AI Assistant' },
   { id: 'billing' as const, label: 'Billing' },
 ];
 

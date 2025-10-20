@@ -256,6 +256,7 @@
         </nav>
       </div>
     </main>
+    <ai-chat-widget />
   </div>
 </template>
 
@@ -263,6 +264,7 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch, watchEffect } from 'vue';
 import { useRoute } from 'vue-router';
 
+import AiChatWidget from '@/components/ai-chat-widget.vue';
 import { useAgentSiteStore, usePropertyCatalogStore } from '@/store';
 import MapView from '@/pages/storefront/map-view.vue';
 import PropertyCarousel from '@/pages/storefront/property-carousel.vue';
