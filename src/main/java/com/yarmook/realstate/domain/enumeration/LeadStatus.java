@@ -9,4 +9,5 @@ public enum LeadStatus {
     QUALIFIED,
     WON,
     LOST,
+    RESOLVED,
 }

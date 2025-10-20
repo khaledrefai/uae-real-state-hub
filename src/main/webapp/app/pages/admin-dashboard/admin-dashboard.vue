@@ -216,21 +216,226 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+/* Clean Professional Admin Dashboard */
+.admin-dashboard {
+  min-height: 100vh;
+  background: #f8f9fa;
+  padding-bottom: 2rem;
+}
+
+/* Header */
+.admin-dashboard h1 {
+  color: #1a202c;
+  font-weight: 700;
+}
+
+.admin-dashboard .text-muted {
+  color: #718096 !important;
+  font-size: 1rem;
+}
+
+/* Metric Cards */
 .metric-card {
-  background: #ffffff;
-  border-radius: 1rem;
+  background: white;
+  border-radius: 0.75rem;
   padding: 1.5rem;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+.metric-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-color: #6366f1;
 }
 
 .metric-value {
-  font-size: 2.2rem;
+  font-size: 2rem;
   font-weight: 700;
+  color: #6366f1;
+  line-height: 1.2;
+  margin-bottom: 0.25rem;
 }
 
 .metric-label {
   text-transform: uppercase;
-  font-size: 0.8rem;
-  letter-spacing: 0.08em;
-  color: rgba(31, 44, 61, 0.65);
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  color: #718096;
+  font-weight: 600;
+}
+
+/* Cards */
+.card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+.card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+  background: #f7fafc;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 1rem 1.25rem;
+  font-weight: 600;
+}
+
+.card-header h2 {
+  color: #1a202c;
+  font-size: 1.125rem;
+  font-weight: 700;
+}
+
+.card-header small {
+  color: #718096;
+  font-weight: 500;
+}
+
+.card-body {
+  padding: 1.25rem;
+}
+
+/* Buttons */
+.btn {
+  border-radius: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  border: none;
+  font-size: 0.875rem;
+}
+
+.btn-primary {
+  background: #6366f1;
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #4f46e5;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.btn-outline-primary {
+  border: 1px solid white;
+  color: white;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.btn-outline-primary:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: white;
+  color: white;
+}
+
+.btn-outline-secondary,
+.btn-sm.btn-outline-secondary {
+  border: 1px solid #cbd5e0;
+  color: #4a5568;
+  background: white;
+}
+
+.btn-outline-secondary:hover,
+.btn-sm.btn-outline-secondary:hover {
+  background: #f7fafc;
+  border-color: #a0aec0;
+  color: #2d3748;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Tables */
+.table {
+  background: transparent;
+}
+
+.table thead th {
+  border-bottom: 2px solid #e2e8f0;
+  color: #4a5568;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  padding: 0.75rem 1rem;
+  background: #f7fafc;
+}
+
+.table tbody tr {
+  transition: all 0.2s ease;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.table tbody tr:hover {
+  background: #f7fafc;
+}
+
+.table td {
+  vertical-align: middle;
+  padding: 0.875rem 1rem;
+  color: #2d3748;
+  font-weight: 500;
+}
+
+.table .text-center {
+  padding: 2rem;
+}
+
+/* List Styling */
+.list-unstyled li {
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.list-unstyled li:last-child {
+  border-bottom: none;
+}
+
+.font-weight-semibold {
+  font-weight: 600;
+  color: #1a202c;
+  font-size: 0.95rem;
+}
+
+/* Typography */
+.small {
+  font-size: 0.875rem;
+  color: #718096;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .metric-card {
+    margin-bottom: 1rem;
+  }
+
+  .admin-dashboard h1 {
+    font-size: 1.75rem;
+  }
+
+  .metric-value {
+    font-size: 1.75rem;
+  }
+
+  .btn {
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+}
+
+/* Loading States */
+.spinner-border {
+  width: 2rem;
+  height: 2rem;
+  border-width: 0.25rem;
+  color: #6366f1;
 }
 </style>

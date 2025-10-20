@@ -168,73 +168,194 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+/* Modern Map View Styling */
 .storefront-map {
   width: 100%;
-  min-height: 320px;
-  border-radius: 1rem;
+  min-height: 400px;
+  border-radius: 1.75rem;
   overflow: hidden;
-  box-shadow: inset 0 0 0 1px rgba(13, 35, 70, 0.08);
+  box-shadow:
+    0 10px 40px rgba(0, 0, 0, 0.12),
+    inset 0 0 0 2px rgba(102, 126, 234, 0.1);
+  border: 2px solid rgba(102, 126, 234, 0.15);
+  transition: all 0.3s ease;
 }
 
+.storefront-map:hover {
+  box-shadow:
+    0 15px 50px rgba(0, 0, 0, 0.18),
+    inset 0 0 0 2px rgba(102, 126, 234, 0.2);
+}
+
+/* Modern Property Markers */
 .property-marker {
   border: 0;
   background: transparent;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
 }
 
 .property-marker__pin {
   display: block;
-  width: 18px;
-  height: 18px;
+  width: 22px;
+  height: 22px;
   border-radius: 50% 50% 50% 0;
-  background: #2b7cff;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   transform: rotate(-45deg);
-  box-shadow: 0 0 0 4px rgba(43, 124, 255, 0.18);
+  box-shadow:
+    0 0 0 4px rgba(102, 126, 234, 0.25),
+    0 4px 15px rgba(102, 126, 234, 0.4);
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.property-marker__pin::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(45deg);
+  width: 8px;
+  height: 8px;
+  background: white;
+  border-radius: 50%;
+}
+
+.property-marker:hover .property-marker__pin {
+  width: 26px;
+  height: 26px;
+  box-shadow:
+    0 0 0 6px rgba(102, 126, 234, 0.35),
+    0 6px 20px rgba(102, 126, 234, 0.5);
 }
 
 .property-marker--highlight .property-marker__pin {
-  background: #ff7043;
-  box-shadow: 0 0 0 6px rgba(255, 112, 67, 0.22);
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  box-shadow:
+    0 0 0 6px rgba(240, 147, 251, 0.3),
+    0 6px 25px rgba(245, 87, 108, 0.5);
+  animation: markerPulse 2s ease-in-out infinite;
 }
 
+@keyframes markerPulse {
+  0%,
+  100% {
+    transform: rotate(-45deg) scale(1);
+  }
+  50% {
+    transform: rotate(-45deg) scale(1.15);
+  }
+}
+
+/* Modern Map Popup */
 .map-popup {
-  font-size: 0.875rem;
-  color: #12243c;
+  font-size: 0.9rem;
+  color: #2d3748;
+  font-family: inherit;
+  max-width: 300px;
 }
 
 .map-popup__title {
-  font-size: 1rem;
-  margin-bottom: 0.25rem;
+  font-size: 1.15rem;
+  font-weight: 800;
+  margin-bottom: 0.5rem;
+  color: #2d3748;
+  line-height: 1.3;
 }
 
 .map-popup__location {
-  margin-bottom: 0.25rem;
-  color: #51617d;
-  font-size: 0.85rem;
+  margin-bottom: 0.5rem;
+  color: #718096;
+  font-size: 0.875rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.map-popup__location::before {
+  content: '📍';
+  font-size: 0.9rem;
 }
 
 .map-popup__price {
-  font-weight: 600;
-  margin-bottom: 0.25rem;
+  font-weight: 900;
+  margin-bottom: 0.5rem;
+  font-size: 1.25rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .map-popup__meta {
-  margin-bottom: 0.35rem;
-  color: #1a2f55;
-  font-size: 0.85rem;
+  margin-bottom: 0.5rem;
+  color: #4a5568;
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding: 0.5rem;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+  border-radius: 0.5rem;
+  border-left: 3px solid #667eea;
 }
 
 .map-popup__summary {
-  margin-bottom: 0.5rem;
-  color: #4a5a75;
+  margin-bottom: 0.75rem;
+  color: #718096;
+  line-height: 1.6;
+  font-weight: 500;
 }
 
 .map-popup__cta {
   display: inline-block;
-  font-weight: 600;
-  color: #1b4de4;
+  font-weight: 700;
+  color: white;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 0.5rem 1.25rem;
+  border-radius: 0.75rem;
+  text-decoration: none;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.8rem;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+  transition: all 0.3s ease;
 }
 
 .map-popup__cta:hover {
-  text-decoration: underline;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+  text-decoration: none;
+}
+
+/* Map Controls Styling (if using default Leaflet controls) */
+:global(.leaflet-control-zoom a) {
+  background: white !important;
+  border: 2px solid rgba(102, 126, 234, 0.2) !important;
+  color: #667eea !important;
+  font-weight: 700 !important;
+  transition: all 0.3s ease !important;
+  border-radius: 0.5rem !important;
+}
+
+:global(.leaflet-control-zoom a:hover) {
+  background: #667eea !important;
+  color: white !important;
+  border-color: #667eea !important;
+}
+
+:global(.leaflet-popup-content-wrapper) {
+  background: rgba(255, 255, 255, 0.98) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border-radius: 1.25rem !important;
+  box-shadow: 0 15px 45px rgba(0, 0, 0, 0.2) !important;
+  border: 2px solid rgba(102, 126, 234, 0.1) !important;
+  padding: 0.5rem !important;
+}
+
+:global(.leaflet-popup-tip) {
+  background: rgba(255, 255, 255, 0.98) !important;
+  border: 2px solid rgba(102, 126, 234, 0.1) !important;
 }
 </style>

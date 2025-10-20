@@ -6,7 +6,8 @@
       "CONTACTED": "CONTACTED",
       "QUALIFIED": "QUALIFIED",
       "WON": "WON",
-      "LOST": "LOST"
+      "LOST": "LOST",
+      "RESOLVED": "RESOLVED"
     }
   }
 }

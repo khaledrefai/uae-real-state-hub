@@ -29,10 +29,8 @@ public class ContactLeadDTO implements Serializable {
 
     private String utm;
 
-    @NotNull
     private Instant createdAt;
 
-    @NotNull
     private LeadStatus status;
 
     private AgentSiteDTO site;

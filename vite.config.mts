@@ -25,6 +25,7 @@ let config = defineConfig({
       ],
     }),
   ],
+  envDir: fileURLToPath(new URL('./', import.meta.url)),
   root: fileURLToPath(new URL('./src/main/webapp/', import.meta.url)),
   publicDir: fileURLToPath(new URL('./target/classes/static/public', import.meta.url)),
   cacheDir: fileURLToPath(new URL('./target/.vite-cache', import.meta.url)),

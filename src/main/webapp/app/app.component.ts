@@ -2,7 +2,7 @@ import { computed, defineComponent, provide } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { storeToRefs } from 'pinia';
 
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { useLoginModal } from '@/account/login-modal';
 import LoginForm from '@/account/login-form/login-form.vue';
 import Ribbon from '@/core/ribbon/ribbon.vue';
@@ -30,7 +30,9 @@ export default defineComponent({
     const { account, authenticated } = storeToRefs(accountStore);
     const isAuthenticated = computed(() => Boolean(authenticated.value));
     const isAdmin = computed(() => Boolean(account.value?.authorities?.includes('ROLE_ADMIN')));
+    const route = useRoute();
     const router = useRouter();
+    const isStorefrontRoute = computed(() => route.path.startsWith('/store/'));
     const logout = () => {
       localStorage.removeItem('jhi-authenticationToken');
       sessionStorage.removeItem('jhi-authenticationToken');
@@ -46,6 +48,7 @@ export default defineComponent({
       logout,
       isAdmin,
       isAuthenticated,
+      isStorefrontRoute,
       t$: useI18n().t,
     };
   },

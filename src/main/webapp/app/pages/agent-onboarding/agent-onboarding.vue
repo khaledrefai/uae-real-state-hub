@@ -576,79 +576,460 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+/* Modern Onboarding with Progress Flow */
 .agent-onboarding {
   min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+  background-attachment: fixed;
+  position: relative;
+  padding: 3rem 0;
+}
+
+.agent-onboarding::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background:
+    radial-gradient(circle at 25% 25%, rgba(252, 70, 107, 0.2), transparent 50%),
+    radial-gradient(circle at 75% 75%, rgba(63, 94, 251, 0.2), transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(240, 147, 251, 0.15), transparent 50%);
+  pointer-events: none;
+  animation: onboardingPulse 10s ease infinite alternate;
+}
+
+@keyframes onboardingPulse {
+  0% {
+    opacity: 0.8;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* Typography */
+.agent-onboarding h1 {
+  color: white;
+  font-weight: 900;
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  letter-spacing: -1px;
+}
+
+.agent-onboarding .lead {
+  color: rgba(255, 255, 255, 0.95);
+  font-weight: 500;
+  font-size: 1.15rem;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+/* Modern Card */
+.card {
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-radius: 2rem;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  position: relative;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+}
+
+.card-body {
+  padding: 3rem 2.5rem;
+}
+
+/* Step Indicators */
+.onboarding-steps {
+  margin: 0;
+  padding: 0;
+  margin-bottom: 3rem;
 }
 
 .onboarding-step {
   display: flex;
   align-items: center;
-  padding: 0.75rem 1rem;
-  border-radius: 0.75rem;
-  background: #f1f4f8;
-  flex: 1 1 220px;
-  margin: 0.5rem;
-  transition: all 0.2s ease;
+  padding: 1.25rem 1.5rem;
+  border-radius: 1.25rem;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.08) 0%, rgba(118, 75, 162, 0.08) 100%);
+  flex: 1 1 240px;
+  margin: 0.75rem;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  border: 2px solid transparent;
+  position: relative;
+  overflow: hidden;
+}
+
+.onboarding-step::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+  transform: scaleY(0);
+  transition: transform 0.4s ease;
+}
+
+.onboarding-step:hover {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.12) 0%, rgba(118, 75, 162, 0.12) 100%);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15);
 }
 
 .onboarding-step.active {
-  background: #244a87;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: #fff;
+  border-color: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 12px 35px rgba(102, 126, 234, 0.4);
+  transform: scale(1.05);
+}
+
+.onboarding-step.active::before {
+  transform: scaleY(1);
 }
 
 .onboarding-step.completed {
-  border: 1px solid rgba(36, 74, 135, 0.5);
+  border: 2px solid rgba(102, 126, 234, 0.4);
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.15) 100%);
+  position: relative;
+}
+
+.onboarding-step.completed::after {
+  content: '✓';
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  width: 24px;
+  height: 24px;
+  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 900;
+  font-size: 0.85rem;
+  box-shadow: 0 4px 12px rgba(17, 153, 142, 0.4);
 }
 
 .step-index {
-  font-size: 1.35rem;
-  font-weight: 700;
-  margin-right: 1rem;
+  font-size: 1.75rem;
+  font-weight: 900;
+  margin-right: 1.25rem;
+  width: 45px;
+  height: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.onboarding-step.active .step-index {
+  background: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.2);
 }
 
 .step-title {
-  font-weight: 600;
+  font-weight: 700;
+  font-size: 1.05rem;
+  margin-bottom: 0.25rem;
 }
 
 .step-description {
   font-size: 0.85rem;
-  opacity: 0.8;
+  opacity: 0.85;
+  font-weight: 500;
 }
 
-.plan-selector .plan-card {
-  border: 1px solid #d6deeb;
-  border-radius: 1rem;
-  padding: 1.5rem;
-  cursor: pointer;
-  height: 100%;
-  transition: all 0.2s ease;
+/* Form Styling */
+form h2 {
+  color: #2d3748;
+  font-weight: 800;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 3px solid rgba(102, 126, 234, 0.2);
 }
 
-.plan-selector .plan-card:hover,
-.plan-selector .plan-card.active {
-  border-color: #244a87;
-  box-shadow: 0 0 0 3px rgba(36, 74, 135, 0.2);
-}
-
-.plan-name {
-  font-weight: 600;
+.form-group label {
+  font-weight: 700;
+  color: #2d3748;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
   margin-bottom: 0.5rem;
 }
 
-.plan-price {
-  font-size: 1.5rem;
-  font-weight: 700;
-  margin-bottom: 0.25rem;
+.form-control {
+  border-radius: 0.875rem;
+  border: 2px solid rgba(102, 126, 234, 0.2);
+  padding: 0.875rem 1.25rem;
+  transition: all 0.3s ease;
+  background: rgba(255, 255, 255, 0.95);
+  font-weight: 500;
+  font-size: 0.95rem;
 }
 
+.form-control:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+  outline: none;
+  background: white;
+  transform: translateY(-2px);
+}
+
+.form-control::placeholder {
+  color: #a0aec0;
+  font-weight: 400;
+}
+
+.form-text {
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-top: 0.5rem;
+}
+
+.text-muted {
+  color: #718096 !important;
+}
+
+.text-danger {
+  color: #f56565 !important;
+  font-weight: 700;
+}
+
+/* Plan Selector */
+.plan-selector .plan-card {
+  border: 2px solid rgba(102, 126, 234, 0.2);
+  border-radius: 1.5rem;
+  padding: 2rem 1.75rem;
+  cursor: pointer;
+  height: 100%;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  background: white;
+  position: relative;
+  overflow: hidden;
+}
+
+.plan-selector .plan-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  transform: scaleX(0);
+  transition: transform 0.4s ease;
+}
+
+.plan-selector .plan-card:hover {
+  transform: translateY(-8px);
+  border-color: #667eea;
+  box-shadow: 0 15px 45px rgba(102, 126, 234, 0.25);
+}
+
+.plan-selector .plan-card:hover::before {
+  transform: scaleX(1);
+}
+
+.plan-selector .plan-card.active {
+  border-color: #667eea;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.08) 0%, rgba(118, 75, 162, 0.08) 100%);
+  box-shadow: 0 12px 40px rgba(102, 126, 234, 0.3);
+  transform: scale(1.05);
+}
+
+.plan-selector .plan-card.active::before {
+  transform: scaleX(1);
+}
+
+.plan-selector .plan-card.active::after {
+  content: '✓ Selected';
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+  color: white;
+  padding: 0.35rem 0.75rem;
+  border-radius: 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  box-shadow: 0 4px 12px rgba(17, 153, 142, 0.3);
+}
+
+.plan-name {
+  font-weight: 800;
+  font-size: 1.5rem;
+  margin-bottom: 0.75rem;
+  color: #2d3748;
+}
+
+.plan-price {
+  font-size: 2rem;
+  font-weight: 900;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 0.5rem;
+}
+
+/* Buttons */
+.btn {
+  border-radius: 0.875rem;
+  padding: 0.875rem 2rem;
+  font-weight: 700;
+  transition: all 0.3s ease;
+  border: none;
+  position: relative;
+  overflow: hidden;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.9rem;
+}
+
+.btn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition:
+    width 0.6s,
+    height 0.6s;
+}
+
+.btn:hover::before {
+  width: 350px;
+  height: 350px;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+}
+
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 35px rgba(102, 126, 234, 0.5);
+}
+
+.btn-secondary {
+  background: linear-gradient(135deg, #a8a8a8 0%, #cccccc 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(168, 168, 168, 0.3);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(168, 168, 168, 0.4);
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+/* Navigation Buttons */
+.d-flex.justify-content-between {
+  margin-top: 2.5rem;
+  padding-top: 2rem;
+  border-top: 2px solid rgba(102, 126, 234, 0.1);
+}
+
+/* Responsive Design */
 @media (max-width: 767.98px) {
+  .agent-onboarding {
+    padding: 2rem 0;
+  }
+
+  .agent-onboarding h1 {
+    font-size: 2rem;
+  }
+
   .onboarding-step {
     flex-direction: column;
     text-align: center;
+    padding: 1rem;
   }
+
   .step-index {
     margin-right: 0;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.75rem;
   }
+
+  .card-body {
+    padding: 2rem 1.5rem;
+  }
+
+  .onboarding-steps {
+    flex-direction: column;
+  }
+
+  .onboarding-step {
+    width: 100%;
+    margin: 0.5rem 0;
+  }
+
+  .plan-selector .plan-card {
+    margin-bottom: 1.5rem;
+  }
+
+  .btn {
+    width: 100%;
+    margin-bottom: 0.75rem;
+  }
+}
+
+/* Loading States */
+.spinner-border {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-width: 0.3rem;
+  color: #667eea;
+}
+
+/* Selection */
+::selection {
+  background: rgba(102, 126, 234, 0.3);
+  color: #2d3748;
+}
+
+/* Smooth Scrolling */
+html {
+  scroll-behavior: smooth;
 }
 </style>

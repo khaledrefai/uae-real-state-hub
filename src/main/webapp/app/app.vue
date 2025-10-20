@@ -3,7 +3,7 @@
     <ribbon></ribbon>
     <div id="app-header">
       <jhi-navbar v-if="isAdmin"></jhi-navbar>
-      <div v-else class="public-topbar">
+      <div v-else-if="!isStorefrontRoute" class="public-topbar">
         <router-link class="public-brand" to="/">Real Estate Hub</router-link>
         <div class="public-actions">
           <router-link v-if="isAuthenticated" class="btn btn-outline-light btn-sm mr-2" to="/agent/dashboard">Dashboard</router-link>

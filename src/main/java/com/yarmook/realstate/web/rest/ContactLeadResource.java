@@ -1,5 +1,6 @@
 package com.yarmook.realstate.web.rest;
 
+import com.yarmook.realstate.domain.enumeration.LeadStatus;
 import com.yarmook.realstate.repository.ContactLeadRepository;
 import com.yarmook.realstate.service.ContactLeadQueryService;
 import com.yarmook.realstate.service.ContactLeadService;
@@ -10,6 +11,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -69,6 +71,15 @@ public class ContactLeadResource {
         if (contactLeadDTO.getId() != null) {
             throw new BadRequestAlertException("A new contactLead cannot already have an ID", ENTITY_NAME, "idexists");
         }
+
+        // Set default values if not provided
+        if (contactLeadDTO.getCreatedAt() == null) {
+            contactLeadDTO.setCreatedAt(Instant.now());
+        }
+        if (contactLeadDTO.getStatus() == null) {
+            contactLeadDTO.setStatus(LeadStatus.NEW);
+        }
+
         contactLeadDTO = contactLeadService.save(contactLeadDTO);
         return ResponseEntity.created(new URI("/api/contact-leads/" + contactLeadDTO.getId()))
             .headers(HeaderUtil.createEntityCreationAlert(applicationName, true, ENTITY_NAME, contactLeadDTO.getId().toString()))

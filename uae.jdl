@@ -2,7 +2,7 @@ enum Currency { AED, USD, EUR }
 enum ListingType { SALE, RENT, OFF_PLAN }
 enum PropertyStatus { Presale, Available, Sold, Rented, Withdrawn, Draft }
 enum MediaKind { COVER, ARCHITECTURE, INTERIOR, LOBBY, MASTER_PLAN, TYPICAL_UNIT, DOCUMENT }
-enum LeadStatus { NEW, CONTACTED, QUALIFIED, WON, LOST }
+enum LeadStatus { NEW, CONTACTED, QUALIFIED, WON, LOST, RESOLVED }
 
 /* AGENTS & SITES — independent from properties */
 entity AgentProfile {
