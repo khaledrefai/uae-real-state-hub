@@ -21,9 +21,10 @@ RUN chmod +x mvnw
 # Download dependencies (cached layer)
 RUN ./mvnw dependency:go-offline -B
 
-# Copy source code
+# Copy source code and config files
 COPY src src
 COPY package.json package-lock.json tsconfig*.json vite.config.mts ./
+COPY sonar-project.properties checkstyle.xml ./
 
 # Build the application with production profile
 RUN ./mvnw clean package -Pprod -DskipTests
