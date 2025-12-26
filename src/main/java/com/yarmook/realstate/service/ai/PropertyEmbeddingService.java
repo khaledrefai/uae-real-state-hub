@@ -16,6 +16,7 @@ import com.yarmook.realstate.repository.PropertyRepository;
 import com.yarmook.realstate.repository.UnitAvailabilityRepository;
 import com.yarmook.realstate.repository.UnitBlockRepository;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -29,6 +30,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -106,6 +108,13 @@ public class PropertyEmbeddingService {
                     indexProperty(property, batchSize);
                 } catch (Exception e) {
                     LOG.error("Failed to index property extId={} id={}", property.getExtId(), property.getId(), e);
+                    if (e instanceof RuntimeException runtimeException) {
+                        throw runtimeException;
+                    }
+                    throw new IllegalStateException(
+                        "Property embeddings indexing aborted due to failure on extId=" + property.getExtId(),
+                        e
+                    );
                 }
             }
             pageNumber++;
@@ -131,8 +140,7 @@ public class PropertyEmbeddingService {
         List<PropertyChunk> chunks = buildChunks(property, titleLine, facilities, mapPoints, unitSummary, paymentPlans, planItems);
 
         if (chunks.isEmpty()) {
-            LOG.warn("Property extId={} has no meaningful content to index; clearing existing vectors", extId);
-            qdrantClient.deleteByExtId(extId);
+            LOG.warn("Property extId={} has no meaningful content to index; skipping vector update", extId);
             return;
         }
 
@@ -432,7 +440,8 @@ public class PropertyEmbeddingService {
     }
 
     private String buildPointId(Long extId, PropertyChunk chunk) {
-        return "property-%s-%s-%03d".formatted(extId, chunk.type().toLowerCase(Locale.ROOT), chunk.sequence());
+        String rawId = "property-%s-%s-%03d".formatted(extId, chunk.type().toLowerCase(Locale.ROOT), chunk.sequence());
+        return UUID.nameUUIDFromBytes(rawId.getBytes(StandardCharsets.UTF_8)).toString();
     }
 
     private String formatMapPoint(MapPoint mapPoint) {

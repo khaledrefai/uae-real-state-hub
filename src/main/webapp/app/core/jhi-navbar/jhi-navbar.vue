@@ -73,6 +73,10 @@
             <font-awesome-icon icon="cloud-upload-alt" />
             <span v-text="t$('global.menu.admin.import')"></span>
           </b-dropdown-item>
+          <b-dropdown-item button class="d-flex align-items-center" :disabled="aiIndexing" @click="triggerAiReindex">
+            <font-awesome-icon icon="robot" class="mr-2" :spin="aiIndexing" />
+            <span>{{ aiIndexing ? t$('global.menu.admin.aiIndexerInProgress') : t$('global.menu.admin.aiIndexer') }}</span>
+          </b-dropdown-item>
           <b-dropdown-divider></b-dropdown-divider>
           <b-dropdown-item button class="d-flex align-items-center" :disabled="reelyImporting" @click="triggerReelyImport">
             <font-awesome-icon icon="sync" class="mr-2" :spin="reelyImporting" />

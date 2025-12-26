@@ -1,0 +1,94 @@
+# Production Docker Compose for UAE Real State Hub
+# Deploy on VPS with: docker compose -f docker-compose.prod.yml up -d
+
+name: uaerealstatehub-prod
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: uaerealstatehub:latest
+    container_name: uaerealstatehub-app
+    restart: unless-stopped
+    environment:
+      - _JAVA_OPTIONS=-Xmx512m -Xms256m
+      - SPRING_PROFILES_ACTIVE=prod
+      - SPRING_DATA_MONGODB_URI=${MONGODB_URI:-mongodb://admin:Admin_2025!@mongodb:27017/propertieshub?authSource=admin}
+      - SPRING_DATA_MONGODB_DATABASE=propertieshub
+      - JHIPSTER_SECURITY_AUTHENTICATION_JWT_BASE64_SECRET=${JWT_SECRET:-OTg5MzRmYWMyMmVhNTZlY2RlMzc2OGIyMGZlYTQ0MTZhZjA0MjcwMmJhNDE5YjQzMjZjNjc5MDllZWNkMmJlMzY1NGVjNjZmN2ZmZDRmY2U5ZTFiNjg5ZGIyN2Y5YjliOTcwMzEyZGQxZWZjZDhmMzg3NWQzZTlkM2EzNDI2YjA=}
+      - MANAGEMENT_PROMETHEUS_METRICS_EXPORT_ENABLED=true
+    ports:
+      - '8080:8080'
+    networks:
+      - uaerealstate-network
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:8080/management/health']
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '10m'
+        max-file: '3'
+
+  mongodb:
+    image: mongo:7.0
+    container_name: uaerealstatehub-mongodb
+    restart: unless-stopped
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_USER:-admin}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD:-Admin_2025!}
+      - MONGO_INITDB_DATABASE=propertieshub
+    ports:
+      - '27017:27017'
+    volumes:
+      - mongodb_data:/data/db
+      - mongodb_config:/data/configdb
+    networks:
+      - uaerealstate-network
+    healthcheck:
+      test: ['CMD', 'mongosh', 'mongodb://localhost:27017/admin', '--quiet', '--eval', 'db.adminCommand({ ping: 1 })']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '10m'
+        max-file: '3'
+
+  # Optional: Nginx reverse proxy for SSL termination
+  nginx:
+    image: nginx:alpine
+    container_name: uaerealstatehub-nginx
+    restart: unless-stopped
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - ./nginx/logs:/var/log/nginx
+    networks:
+      - uaerealstate-network
+    depends_on:
+      - app
+    profiles:
+      - with-nginx
+
+networks:
+  uaerealstate-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:
+    driver: local
+  mongodb_config:
+    driver: local

@@ -96,9 +96,28 @@ interface BackendPropertyContext {
   keyPoints?: string[];
 }
 
+interface AgentStatePayload {
+  budgetMaxAed?: number | null;
+  purpose?: string | null;
+  plan?: string | null;
+  interestConfirmed?: boolean | null;
+  leadName?: string | null;
+  leadPhone?: string | null;
+  leadCaptured?: boolean;
+  stage?: string | null;
+  minArea?: number | null;
+  maxArea?: number | null;
+  completionYearFrom?: number | null;
+  completionYearTo?: number | null;
+  city?: string | null;
+  area?: string | null;
+}
+
 interface BackendChatResponse {
   answer: string;
   context: BackendPropertyContext[];
+  agentState?: AgentStatePayload;
+  leadCreated?: boolean;
 }
 
 const router = useRouter();
@@ -113,6 +132,7 @@ const messages = ref<ChatMessage[]>([
   },
 ]);
 const contextEntries = ref<BackendPropertyContext[]>([]);
+const agentState = ref<AgentStatePayload | undefined>(undefined);
 const draft = ref('');
 const loading = ref(false);
 const error = ref('');
@@ -164,9 +184,13 @@ const sendMessage = async () => {
 
   try {
     loading.value = true;
-    const { data } = await axios.post<BackendChatResponse>('api/chat', { message: content });
+    const { data } = await axios.post<BackendChatResponse>('api/chat', {
+      message: content,
+      agentState: agentState.value,
+    });
     appendMessage({ role: 'assistant', content: data?.answer ?? 'No response available.' });
     contextEntries.value = Array.isArray(data?.context) ? data.context : [];
+    agentState.value = data?.agentState ?? agentState.value;
   } catch (e) {
     error.value = 'Unable to reach the assistant.';
     appendMessage({

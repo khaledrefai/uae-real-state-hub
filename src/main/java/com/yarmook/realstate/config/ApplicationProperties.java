@@ -152,6 +152,8 @@ public class ApplicationProperties {
             private String embeddingsModel = "text-embedding-3-small";
             private String chatModel = "gpt-4o-mini";
             private Double temperature = 0.2d;
+            private Integer maxRetries = 3;
+            private Long retryBackoffMillis = 2000L;
 
             public String getApiKey() {
                 return apiKey;
@@ -191,6 +193,22 @@ public class ApplicationProperties {
 
             public void setTemperature(Double temperature) {
                 this.temperature = temperature;
+            }
+
+            public Integer getMaxRetries() {
+                return maxRetries;
+            }
+
+            public void setMaxRetries(Integer maxRetries) {
+                this.maxRetries = maxRetries;
+            }
+
+            public Long getRetryBackoffMillis() {
+                return retryBackoffMillis;
+            }
+
+            public void setRetryBackoffMillis(Long retryBackoffMillis) {
+                this.retryBackoffMillis = retryBackoffMillis;
             }
         }
 

@@ -1,0 +1,3 @@
+# Nginx log files directory
+# Logs are volume-mounted from the container
+

@@ -1,0 +1,7 @@
+# This directory holds SSL certificates for production
+# Do NOT commit actual certificates to git!
+# 
+# Place these files here:
+# - fullchain.pem (or cert.pem)
+# - privkey.pem (or key.pem)
+

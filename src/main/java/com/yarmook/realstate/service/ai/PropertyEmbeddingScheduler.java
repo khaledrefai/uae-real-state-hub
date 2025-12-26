@@ -19,7 +19,7 @@ public class PropertyEmbeddingScheduler {
         this.propertyEmbeddingService = propertyEmbeddingService;
     }
 
-    @Scheduled(cron = "${application.ai.indexer.cron:0 0 3 * * *}")
+    //@Scheduled(cron = "${application.ai.indexer.cron:0 0 3 * * *}")
     public void scheduledIndexing() {
         if (!applicationProperties.getAi().getIndexer().isEnabled()) {
             LOG.trace("AI indexer disabled; skipping scheduled run");

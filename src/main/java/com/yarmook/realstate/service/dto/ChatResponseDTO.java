@@ -7,6 +7,8 @@ public class ChatResponseDTO {
 
     private String answer;
     private List<PropertyContextDTO> context = new ArrayList<>();
+    private AiAgentStateDTO agentState;
+    private boolean leadCreated;
 
     public String getAnswer() {
         return answer;
@@ -22,5 +24,21 @@ public class ChatResponseDTO {
 
     public void setContext(List<PropertyContextDTO> context) {
         this.context = context;
+    }
+
+    public AiAgentStateDTO getAgentState() {
+        return agentState;
+    }
+
+    public void setAgentState(AiAgentStateDTO agentState) {
+        this.agentState = agentState;
+    }
+
+    public boolean isLeadCreated() {
+        return leadCreated;
+    }
+
+    public void setLeadCreated(boolean leadCreated) {
+        this.leadCreated = leadCreated;
     }
 }

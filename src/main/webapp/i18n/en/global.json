@@ -43,6 +43,10 @@
         "import": "Import data",
         "reelySync": "Sync Reely data",
         "reelySyncInProgress": "Syncing...",
+        "aiIndexer": "Rebuild AI index",
+        "aiIndexerInProgress": "Rebuilding AI index...",
+        "aiIndexerSuccess": "AI property index rebuild completed.",
+        "aiIndexerFailure": "Unable to trigger the AI index rebuild. Please try again.",
         "apidocs": "API",
         "database": "Database",
         "jhipster-needle-menu-add-admin-element": "JHipster will add additional menu entries here (do not translate!)"

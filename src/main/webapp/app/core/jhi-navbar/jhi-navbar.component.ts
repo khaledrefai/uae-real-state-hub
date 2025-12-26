@@ -38,6 +38,7 @@ export default defineComponent({
     const router = useRouter();
     const store = useStore();
     const alertService = useAlertService();
+    const { t: t$ } = useI18n();
 
     const version = `v${APP_VERSION}`;
     const hasAnyAuthorityValues: Ref<any> = ref({});
@@ -46,6 +47,7 @@ export default defineComponent({
     const inProduction = computed(() => store.activeProfiles.indexOf('prod') > -1);
     const authenticated = computed(() => store.authenticated);
     const reelyImporting = ref(false);
+    const aiIndexing = ref(false);
 
     const subIsActive = (input: string | string[]) => {
       const paths = Array.isArray(input) ? input : [input];
@@ -85,6 +87,26 @@ export default defineComponent({
       }
     };
 
+    const triggerAiReindex = async () => {
+      if (aiIndexing.value) {
+        return;
+      }
+
+      aiIndexing.value = true;
+      try {
+        await axios.post('api/admin/ai/reindex');
+        alertService.showSuccess(t$('global.menu.admin.aiIndexerSuccess'));
+      } catch (error: any) {
+        if (error?.response) {
+          alertService.showHttpError(error.response);
+        } else {
+          alertService.showError(t$('global.menu.admin.aiIndexerFailure'));
+        }
+      } finally {
+        aiIndexing.value = false;
+      }
+    };
+
     return {
       logout,
       subIsActive,
@@ -100,8 +122,10 @@ export default defineComponent({
       inProduction,
       authenticated,
       triggerReelyImport,
+      triggerAiReindex,
       reelyImporting,
-      t$: useI18n().t,
+      aiIndexing,
+      t$,
     };
   },
   methods: {

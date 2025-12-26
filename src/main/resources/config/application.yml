@@ -23,6 +23,10 @@ spring:
 springdoc:
   api-docs:
     enabled: false
+logging:
+  level:
+    org.mongodb.driver: warn
+    jdk.internal.httpclient.debug: off
 ---
 management:
   endpoints:
@@ -89,6 +93,8 @@ management:
       application: ${spring.application.name}
 
 spring:
+  config:
+    import: optional:file:.env[.properties]
   application:
     name: uaeRealStateHub
   docker:
@@ -220,7 +226,7 @@ application:
       chat-model: ${OPENAI_CHAT_MODEL:gpt-4o-mini}
       temperature: ${OPENAI_CHAT_TEMPERATURE:0.2}
     qdrant:
-      url: ${QDRANT_URL:http://localhost:6333}
+      url: ${QDRANT_URL:http://173.212.199.139:6333}
       api-key: ${QDRANT_API_KEY:}
       collection: ${QDRANT_COLLECTION:reelly}
       batch-size: ${QDRANT_BATCH_SIZE:32}
