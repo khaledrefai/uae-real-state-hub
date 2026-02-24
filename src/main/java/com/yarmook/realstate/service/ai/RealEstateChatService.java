@@ -4,11 +4,13 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.yarmook.realstate.config.ApplicationProperties;
+import com.yarmook.realstate.domain.enumeration.ListingType;
 import com.yarmook.realstate.service.ContactLeadService;
 import com.yarmook.realstate.service.PropertyQueryService;
 import com.yarmook.realstate.service.criteria.PropertyCriteria;
 import com.yarmook.realstate.service.dto.AiAgentStateDTO;
 import com.yarmook.realstate.service.dto.ChatRequestDTO;
+import com.yarmook.realstate.service.dto.ChatRequestDTO.ConversationHistoryMessageDTO;
 import com.yarmook.realstate.service.dto.ChatResponseDTO;
 import com.yarmook.realstate.service.dto.ContactLeadDTO;
 import com.yarmook.realstate.service.dto.PropertyContextDTO;
@@ -111,6 +113,10 @@ public class RealEstateChatService {
     );
     private static final Pattern PHONE_PATTERN = Pattern.compile("(?:(?:\\+|00)\\d{1,3}[\\s-]?)?\\d[\\d\\s-]{6,}");
     private static final Pattern ANY_AMOUNT_PATTERN = Pattern.compile("(?i)" + AMOUNT_REGEX);
+    private static final Pattern PROPERTY_TYPE_PATTERN = Pattern.compile("(?i)\\b(apartment|apts?|flat|villa|townhouse|penthouse)\\b");
+    private static final Pattern FENCED_JSON_PATTERN = Pattern.compile("(?is)^```(?:json)?\\s*(.*?)\\s*```$");
+    private static final int MAX_CONVERSATION_HISTORY_MESSAGES = 6;
+    private static final int MAX_HISTORY_MESSAGE_CHARS = 400;
 
     // Known UAE locations for extraction
     private static final Set<String> KNOWN_CITIES = Set.of(
@@ -199,9 +205,10 @@ public class RealEstateChatService {
 
         LOG.info("Processing chat message: {}", userMessage);
         AgentState state = AgentState.from(request.getAgentState());
+        List<ConversationTurn> conversationHistory = normalizeConversationHistory(request.getConversationHistory());
 
         try {
-            ConversationStepResult result = processWithAI(state, userMessage);
+            ConversationStepResult result = processWithAI(state, userMessage, conversationHistory);
             LOG.info("AI response generated, properties found: {}", result.context().size());
 
             ChatResponseDTO responseDTO = new ChatResponseDTO();
@@ -219,9 +226,13 @@ public class RealEstateChatService {
     /**
      * Process the conversation using ChatGPT and RAG.
      */
-    private ConversationStepResult processWithAI(AgentState state, String userMessage) {
+    private ConversationStepResult processWithAI(AgentState state, String userMessage, List<ConversationTurn> conversationHistory) {
+        // Prime state with deterministic extraction so RAG and follow-up logic still work
+        // even if the model returns malformed JSON or omits structured fields.
+        extractInformationFromMessage(userMessage, state);
+
         // Step 1: Build conversation context for ChatGPT
-        String conversationContext = buildConversationContext(state, userMessage);
+        String conversationContext = buildConversationContext(state, userMessage, conversationHistory);
 
         // Step 2: Perform semantic search using RAG if we have enough context
         List<PropertyContextDTO> ragResults = performSemanticSearch(state, userMessage);
@@ -240,8 +251,8 @@ public class RealEstateChatService {
         updateStateFromAI(state, parsedResponse);
 
         // Step 7: If AI suggests more properties, search again with refined criteria
-        if (StringUtils.hasText(parsedResponse.searchQuery) && ragResults.isEmpty()) {
-            ragResults = performSemanticSearchWithQuery(parsedResponse.searchQuery);
+        if (StringUtils.hasText(parsedResponse.searchQuery) && ragResults.size() < 3) {
+            ragResults = mergePropertyContexts(ragResults, performSemanticSearchWithQuery(parsedResponse.searchQuery));
         }
 
         // Step 8: Handle lead capture if user is ready
@@ -255,7 +266,7 @@ public class RealEstateChatService {
         return ConversationStepResult.of(parsedResponse.message, combinedResults, state, false);
     }
 
-    private String buildConversationContext(AgentState state, String userMessage) {
+    private String buildConversationContext(AgentState state, String userMessage, List<ConversationTurn> conversationHistory) {
         StringBuilder context = new StringBuilder();
         context.append("Current conversation state:\n");
 
@@ -274,13 +285,81 @@ public class RealEstateChatService {
         if (state.getCompletionYearTo() != null) {
             context.append("- Timeline: Ready by ").append(state.getCompletionYearTo()).append("\n");
         }
+        if (StringUtils.hasText(state.getPlan())) {
+            context.append("- Readiness Preference: ").append(state.getPlan()).append("\n");
+        }
+        if (StringUtils.hasText(state.getPropertyType())) {
+            context.append("- Property Type: ").append(state.getPropertyType()).append("\n");
+        }
         if (state.hasLeadName()) {
             context.append("- Client Name: ").append(state.getLeadName()).append("\n");
+        }
+
+        if (!CollectionUtils.isEmpty(conversationHistory)) {
+            context.append("\nRecent conversation history (most recent last):\n");
+            for (ConversationTurn turn : conversationHistory) {
+                context
+                    .append("- ")
+                    .append("assistant".equals(turn.role()) ? "Assistant" : "User")
+                    .append(": ")
+                    .append(turn.content())
+                    .append("\n");
+            }
         }
 
         context.append("\nConversation stage: ").append(state.getStage().name());
 
         return context.toString();
+    }
+
+    private List<ConversationTurn> normalizeConversationHistory(List<ConversationHistoryMessageDTO> incomingHistory) {
+        if (CollectionUtils.isEmpty(incomingHistory)) {
+            return Collections.emptyList();
+        }
+
+        List<ConversationTurn> normalized = new ArrayList<>();
+        for (ConversationHistoryMessageDTO message : incomingHistory) {
+            if (message == null) {
+                continue;
+            }
+
+            String role = normalizeConversationRole(message.getRole());
+            String content = truncatePromptText(message.getContent(), MAX_HISTORY_MESSAGE_CHARS);
+            if (role == null || !StringUtils.hasText(content)) {
+                continue;
+            }
+
+            normalized.add(new ConversationTurn(role, content));
+        }
+
+        if (normalized.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        int fromIndex = Math.max(0, normalized.size() - MAX_CONVERSATION_HISTORY_MESSAGES);
+        return List.copyOf(normalized.subList(fromIndex, normalized.size()));
+    }
+
+    private String normalizeConversationRole(String role) {
+        if (!StringUtils.hasText(role)) {
+            return null;
+        }
+        String normalized = role.trim().toLowerCase(Locale.ENGLISH);
+        return switch (normalized) {
+            case "user", "assistant" -> normalized;
+            default -> null;
+        };
+    }
+
+    private String truncatePromptText(String text, int maxLength) {
+        if (!StringUtils.hasText(text)) {
+            return null;
+        }
+        String normalized = text.trim().replaceAll("\\s+", " ");
+        if (normalized.length() <= maxLength) {
+            return normalized;
+        }
+        return normalized.substring(0, Math.max(0, maxLength - 3)).trim() + "...";
     }
 
     private String buildPropertyContext(List<PropertyContextDTO> properties) {
@@ -330,8 +409,8 @@ public class RealEstateChatService {
 
     private AiResponseData parseAiResponse(String aiResponse, AgentState state) {
         try {
-            // Try to parse as JSON
-            JsonNode root = objectMapper.readTree(aiResponse);
+            // Try to parse as JSON (including common fenced-markdown responses)
+            JsonNode root = objectMapper.readTree(extractJsonCandidate(aiResponse));
 
             String message = root.has("message") ? root.get("message").asText() : aiResponse;
             String searchQuery = root.has("searchQuery") && !root.get("searchQuery").isNull() ? root.get("searchQuery").asText() : null;
@@ -359,6 +438,9 @@ public class RealEstateChatService {
                 }
                 if (info.has("propertyType") && !info.get("propertyType").isNull()) {
                     data.propertyType = info.get("propertyType").asText();
+                }
+                if (info.has("timeline") && !info.get("timeline").isNull()) {
+                    data.timeline = info.get("timeline").asText();
                 }
             }
 
@@ -388,6 +470,10 @@ public class RealEstateChatService {
                 state.setArea(capitalize(aiData.location));
             }
         }
+        if (StringUtils.hasText(aiData.propertyType)) {
+            state.setPropertyType(normalizePropertyType(aiData.propertyType));
+        }
+        applyTimelinePreference(state, aiData.timeline);
         if (aiData.readyForAdvisor) {
             state.setInterestConfirmed(true);
         }
@@ -455,6 +541,16 @@ public class RealEstateChatService {
             } else if ("RENTAL".equals(state.getPurpose())) {
                 query.append("rental income yield ");
             }
+        }
+        if (StringUtils.hasText(state.getPlan())) {
+            if ("READY".equalsIgnoreCase(state.getPlan())) {
+                query.append("ready to move in ready property ");
+            } else if ("OFF_PLAN".equalsIgnoreCase(state.getPlan())) {
+                query.append("off plan new launch payment plan ");
+            }
+        }
+        if (StringUtils.hasText(state.getPropertyType())) {
+            query.append(state.getPropertyType().toLowerCase(Locale.ENGLISH)).append(" ");
         }
 
         // Add user message for additional context
@@ -531,6 +627,37 @@ public class RealEstateChatService {
         return combined.stream().limit(5).toList();
     }
 
+    private List<PropertyContextDTO> mergePropertyContexts(List<PropertyContextDTO> primary, List<PropertyContextDTO> secondary) {
+        List<PropertyContextDTO> merged = new ArrayList<>();
+        if (!CollectionUtils.isEmpty(primary)) {
+            merged.addAll(primary);
+        }
+        if (!CollectionUtils.isEmpty(secondary)) {
+            for (PropertyContextDTO candidate : secondary) {
+                boolean alreadyExists = merged.stream().anyMatch(existing -> sameProperty(existing, candidate));
+                if (!alreadyExists) {
+                    merged.add(candidate);
+                }
+            }
+        }
+        return merged.stream().limit(8).toList();
+    }
+
+    private boolean sameProperty(PropertyContextDTO left, PropertyContextDTO right) {
+        if (left == null || right == null) {
+            return false;
+        }
+        if (left.getExtId() != null && right.getExtId() != null) {
+            return Objects.equals(left.getExtId(), right.getExtId());
+        }
+        if (left.getPropertyId() != null && right.getPropertyId() != null) {
+            return Objects.equals(left.getPropertyId(), right.getPropertyId());
+        }
+        return (
+            StringUtils.hasText(left.getName()) && StringUtils.hasText(right.getName()) && left.getName().equalsIgnoreCase(right.getName())
+        );
+    }
+
     /**
      * Fallback to rule-based processing if AI fails.
      */
@@ -576,6 +703,13 @@ public class RealEstateChatService {
 
         // Extract completion timeline
         extractCompletionWindow(userMessage, state);
+
+        // Extract readiness and property type
+        extractTimelinePreference(userMessage, state);
+        String propertyType = extractPropertyType(userMessage);
+        if (StringUtils.hasText(propertyType)) {
+            state.setPropertyType(propertyType);
+        }
     }
 
     private String buildRuleBasedResponse(AgentState state, List<PropertyContextDTO> properties, String userMessage) {
@@ -794,6 +928,12 @@ public class RealEstateChatService {
         if (StringUtils.hasText(state.getCity())) {
             builder.append("City: ").append(state.getCity()).append(" | ");
         }
+        if (StringUtils.hasText(state.getPlan())) {
+            builder.append("Timeline: ").append(state.getPlan()).append(" | ");
+        }
+        if (StringUtils.hasText(state.getPropertyType())) {
+            builder.append("Type: ").append(state.getPropertyType()).append(" | ");
+        }
         if (!CollectionUtils.isEmpty(contextEntries)) {
             builder.append("Properties: ");
             builder.append(
@@ -804,6 +944,15 @@ public class RealEstateChatService {
     }
 
     private void applyCommonFilters(PropertyCriteria criteria, AgentState state) {
+        if (StringUtils.hasText(state.getPlan())) {
+            if ("READY".equalsIgnoreCase(state.getPlan())) {
+                StringFilter readinessFilter = criteria.readiness();
+                readinessFilter.setContains("ready");
+            } else if ("OFF_PLAN".equalsIgnoreCase(state.getPlan())) {
+                PropertyCriteria.ListingTypeFilter listingTypeFilter = criteria.listingType();
+                listingTypeFilter.setEquals(ListingType.OFF_PLAN);
+            }
+        }
         if (state.getCompletionYearTo() != null || state.getCompletionYearFrom() != null) {
             InstantFilter completionFilter = criteria.completionDateTime();
             if (state.getCompletionYearTo() != null) {
@@ -865,6 +1014,24 @@ public class RealEstateChatService {
         return null;
     }
 
+    private String extractPropertyType(String message) {
+        if (!StringUtils.hasText(message)) {
+            return null;
+        }
+        Matcher matcher = PROPERTY_TYPE_PATTERN.matcher(message);
+        if (!matcher.find()) {
+            return null;
+        }
+        String token = matcher.group(1).toLowerCase(Locale.ENGLISH);
+        return switch (token) {
+            case "apt", "apts", "apartment", "flat" -> "APARTMENT";
+            case "villa" -> "VILLA";
+            case "townhouse" -> "TOWNHOUSE";
+            case "penthouse" -> "PENTHOUSE";
+            default -> null;
+        };
+    }
+
     private void extractCompletionWindow(String message, AgentState state) {
         if (!StringUtils.hasText(message)) {
             return;
@@ -883,6 +1050,78 @@ public class RealEstateChatService {
                 state.setCompletionYearTo(year);
             }
         }
+    }
+
+    private void extractTimelinePreference(String message, AgentState state) {
+        if (!StringUtils.hasText(message)) {
+            return;
+        }
+        String lower = message.toLowerCase(Locale.ENGLISH);
+        if (lower.contains("ready now") || lower.contains("ready property") || lower.contains("move in ready")) {
+            state.setPlan("READY");
+            return;
+        }
+        if (lower.contains("off-plan") || lower.contains("off plan")) {
+            state.setPlan("OFF_PLAN");
+        } else if (lower.contains("ready to move") || lower.contains("move-in ready") || lower.contains("handover")) {
+            state.setPlan("READY");
+        }
+    }
+
+    private void applyTimelinePreference(AgentState state, String timelineValue) {
+        if (!StringUtils.hasText(timelineValue)) {
+            return;
+        }
+        String normalized = timelineValue.trim().toUpperCase(Locale.ENGLISH);
+        if ("READY".equals(normalized) || "READY_NOW".equals(normalized)) {
+            state.setPlan("READY");
+            return;
+        }
+        if ("OFF_PLAN".equals(normalized) || "OFFPLAN".equals(normalized)) {
+            state.setPlan("OFF_PLAN");
+            return;
+        }
+        try {
+            int year = Integer.parseInt(timelineValue.trim());
+            state.setCompletionYearFrom(year);
+            state.setCompletionYearTo(year);
+            if (year > LocalDate.now(ZoneOffset.UTC).getYear()) {
+                state.setPlan("OFF_PLAN");
+            }
+        } catch (NumberFormatException ignored) {
+            // Keep conversation flowing even if the model emits a free-form label.
+        }
+    }
+
+    private String normalizePropertyType(String propertyType) {
+        if (!StringUtils.hasText(propertyType)) {
+            return null;
+        }
+        String normalized = propertyType.trim().toUpperCase(Locale.ENGLISH).replace(' ', '_');
+        return switch (normalized) {
+            case "APARTMENT", "FLAT" -> "APARTMENT";
+            case "VILLA" -> "VILLA";
+            case "TOWNHOUSE" -> "TOWNHOUSE";
+            case "PENTHOUSE" -> "PENTHOUSE";
+            default -> propertyType.trim().toUpperCase(Locale.ENGLISH);
+        };
+    }
+
+    private String extractJsonCandidate(String aiResponse) {
+        if (!StringUtils.hasText(aiResponse)) {
+            return aiResponse;
+        }
+        String trimmed = aiResponse.trim();
+        Matcher fencedMatcher = FENCED_JSON_PATTERN.matcher(trimmed);
+        if (fencedMatcher.matches()) {
+            return fencedMatcher.group(1).trim();
+        }
+        int firstBrace = trimmed.indexOf('{');
+        int lastBrace = trimmed.lastIndexOf('}');
+        if (firstBrace >= 0 && lastBrace > firstBrace) {
+            return trimmed.substring(firstBrace, lastBrace + 1);
+        }
+        return trimmed;
     }
 
     private String extractName(String message) {
@@ -1020,6 +1259,7 @@ public class RealEstateChatService {
         String purpose;
         String location;
         String propertyType;
+        String timeline;
     }
 
     private record ConversationStepResult(String reply, List<PropertyContextDTO> context, AgentState state, boolean leadCreated) {
@@ -1028,6 +1268,8 @@ public class RealEstateChatService {
             return new ConversationStepResult(reply, context, state, leadCreated);
         }
     }
+
+    private record ConversationTurn(String role, String content) {}
 
     private static final class AgentState {
 
@@ -1045,6 +1287,7 @@ public class RealEstateChatService {
         private Integer completionYearTo;
         private String city;
         private String area;
+        private String propertyType;
 
         static AgentState from(AiAgentStateDTO dto) {
             AgentState state = new AgentState();
@@ -1062,6 +1305,7 @@ public class RealEstateChatService {
                 state.completionYearTo = dto.getCompletionYearTo();
                 state.city = dto.getCity();
                 state.area = dto.getArea();
+                state.propertyType = dto.getPropertyType();
             }
             state.refreshStage();
             return state;
@@ -1191,6 +1435,14 @@ public class RealEstateChatService {
             this.area = area;
         }
 
+        String getPropertyType() {
+            return propertyType;
+        }
+
+        void setPropertyType(String propertyType) {
+            this.propertyType = propertyType;
+        }
+
         Stage getStage() {
             return stage != null ? stage : Stage.COLLECT_BUDGET;
         }
@@ -1239,6 +1491,7 @@ public class RealEstateChatService {
             dto.setCompletionYearTo(completionYearTo);
             dto.setCity(city);
             dto.setArea(area);
+            dto.setPropertyType(propertyType);
             return dto;
         }
     }

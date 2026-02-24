@@ -23,6 +23,7 @@ public class AiAgentStateDTO implements Serializable {
     private Integer completionYearTo;
     private String city;
     private String area;
+    private String propertyType;
 
     public Double getBudgetMaxAed() {
         return budgetMaxAed;
@@ -150,5 +151,13 @@ public class AiAgentStateDTO implements Serializable {
 
     public void setArea(String area) {
         this.area = area;
+    }
+
+    public String getPropertyType() {
+        return propertyType;
+    }
+
+    public void setPropertyType(String propertyType) {
+        this.propertyType = propertyType;
     }
 }

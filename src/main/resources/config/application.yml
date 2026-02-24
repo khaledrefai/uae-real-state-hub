@@ -223,7 +223,7 @@ application:
       api-key: ${OPENAI_API_KEY:}
       base-url: ${OPENAI_BASE_URL:https://api.openai.com/v1}
       embeddings-model: ${OPENAI_EMBEDDINGS_MODEL:text-embedding-3-small}
-      chat-model: ${OPENAI_CHAT_MODEL:gpt-4o-mini}
+      chat-model: ${OPENAI_CHAT_MODEL:gpt-4o}
       temperature: ${OPENAI_CHAT_TEMPERATURE:0.2}
     qdrant:
       url: ${QDRANT_URL:http://173.212.199.139:6333}

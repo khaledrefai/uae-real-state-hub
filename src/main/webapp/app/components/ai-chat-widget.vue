@@ -198,6 +198,11 @@ interface BackendPropertyContext {
   keyPoints?: string[];
 }
 
+interface BackendConversationHistoryMessage {
+  role: 'assistant' | 'user';
+  content: string;
+}
+
 interface AgentStatePayload {
   budgetMaxAed?: number | null;
   purpose?: string | null;
@@ -213,6 +218,7 @@ interface AgentStatePayload {
   completionYearTo?: number | null;
   city?: string | null;
   area?: string | null;
+  propertyType?: string | null;
 }
 
 interface BackendChatResponse {
@@ -227,6 +233,7 @@ const propertyStore = usePropertyCatalogStore();
 const agentSiteStore = useAgentSiteStore();
 
 const defaultAssistantGreeting = 'Hi there! I can help you explore developments, availability, payment plans, and nearby amenities.';
+const maxBackendHistoryMessages = 6;
 const suggestionPrompts = [
   'Show me waterfront properties launching soon.',
   'Which communities have 2BR units under 2M AED?',
@@ -288,6 +295,17 @@ const normalizeContent = (value: string): string[] =>
     .split(/\n+/)
     .map(line => line.trim())
     .filter(Boolean);
+
+const buildConversationHistoryPayload = (): BackendConversationHistoryMessage[] =>
+  messages.value
+    .filter(message => message.id !== 0)
+    .filter(message => message.role === 'assistant' || message.role === 'user')
+    .map(message => ({
+      role: message.role,
+      content: message.content.trim(),
+    }))
+    .filter(message => message.content.length > 0)
+    .slice(-maxBackendHistoryMessages);
 
 const togglePanel = () => {
   isOpen.value = !isOpen.value;
@@ -443,6 +461,7 @@ const sendMessage = async () => {
     return;
   }
   const content = draft.value.trim();
+  const conversationHistory = buildConversationHistoryPayload();
   draft.value = '';
   error.value = '';
 
@@ -453,6 +472,7 @@ const sendMessage = async () => {
     const { data } = await axios.post<BackendChatResponse>('api/chat', {
       message: content,
       agentState: agentState.value,
+      conversationHistory,
     });
 
     appendMessage({ role: 'assistant', content: data?.answer ?? "I'm sorry, I couldn't find that information." });

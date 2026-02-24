@@ -150,7 +150,7 @@ public class ApplicationProperties {
             private String apiKey;
             private String baseUrl = "https://api.openai.com/v1";
             private String embeddingsModel = "text-embedding-3-small";
-            private String chatModel = "gpt-4o-mini";
+            private String chatModel = "gpt-4o";
             private Double temperature = 0.2d;
             private Integer maxRetries = 3;
             private Long retryBackoffMillis = 2000L;
