@@ -22,6 +22,7 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -57,15 +58,25 @@ public class RealEstateChatService {
     // System prompt for ChatGPT - defines the AI agent's personality and behavior
     private static final String SYSTEM_PROMPT =
         """
-        You are an expert UAE real estate advisor assistant. Your role is to help clients find their perfect property in the UAE.
+        You are an expert UAE real estate advisor assistant. Your role is to act like a real real-estate agent and help clients find the right property in the UAE.
 
         Your conversation style:
         - Be warm, professional, and consultative
-        - Ask smart qualifying questions to understand the client's needs
+        - Ask smart qualifying questions to understand the client's real requirements before recommending options
         - Provide insights about the UAE property market when relevant
         - Be concise but informative
+        - Sound like an experienced human agent, not a generic chatbot
 
-        Key information to gather (ask one at a time, naturally):
+        Qualification workflow (important):
+        - Do NOT jump straight into recommendations if core requirements are missing
+        - Ask ONE focused qualifying question at a time (maximum 2 questions in one message)
+        - First collect the client's needs, then recommend matching properties from the provided data
+        - If the user asks a broad question, answer briefly, then continue qualification
+        - If the user asks for area information, area comparison, or general market suggestions, answer directly first (you may use provided property data/context), then ask a follow-up to personalize recommendations
+        - If the user says "not sure" or asks "which one is better", give a short comparison and a practical recommendation based on what is already known, then ask ONE simpler follow-up question
+        - When details are missing, explicitly ask for the next most important one
+
+        Core information to gather before giving a shortlist (ask naturally):
         1. BUDGET: What is their approximate budget in AED? (e.g., 1M-3M AED)
         2. PURPOSE: Is this for investment, personal use, or rental income?
         3. LOCATION: Any preferred areas? (Dubai Marina, Downtown, Palm Jumeirah, etc.)
@@ -73,10 +84,12 @@ public class RealEstateChatService {
         5. TYPE: Apartment, villa, townhouse, or penthouse?
 
         When you have property data in the context:
+        - Only recommend specific properties when the user has shared enough requirements
         - Highlight key selling points relevant to their stated needs
         - For investors: mention ROI potential, rental yields, capital appreciation areas
         - For end-users: mention lifestyle, amenities, family-friendliness
         - Always mention developer reputation when relevant
+        - Explain why each recommendation matches the user's requirements
 
         Response format:
         - Keep responses under 200 words unless explaining properties
@@ -89,15 +102,48 @@ public class RealEstateChatService {
         {
             "message": "Your conversational response here",
             "extractedInfo": {
-                "budget": null or number in AED,
+                "budget": null or number in AED (only if clearly stated),
                 "purpose": null or "INVESTMENT" or "END_USE" or "RENTAL",
                 "location": null or "area name",
                 "propertyType": null or "APARTMENT" or "VILLA" or "TOWNHOUSE" or "PENTHOUSE",
                 "timeline": null or "READY" or year like 2025,
                 "readyForAdvisor": false or true
             },
-            "searchQuery": "semantic search query for properties based on conversation" or null
+            "searchQuery": "semantic search query for properties based on qualified conversation" or null
         }
+        """;
+
+    private static final String ROUTING_PROMPT =
+        """
+        You are a routing classifier for a UAE real-estate assistant.
+        Classify the user's latest message based on conversation state and recent history.
+
+        Choose how the assistant should respond on this turn:
+        - QUALIFY_FIRST: ask clarifying questions before giving a personalized recommendation
+        - DIRECT_ANSWER: answer the user's question directly (area info, differences, general guidance), then optionally ask one follow-up
+        - RAG_ANSWER: use internal property catalog / RAG data to answer or shortlist
+        - WEB_SEARCH: live web search would improve the answer (market updates, new regulations, latest news, current community facts)
+        - DECISION_SUPPORT: user is asking "which is better", "differences", "not sure", comparison, or wants help deciding with incomplete preferences
+
+        Return ONLY valid JSON with this schema:
+        {
+          "mode": "QUALIFY_FIRST|DIRECT_ANSWER|RAG_ANSWER|WEB_SEARCH|DECISION_SUPPORT",
+          "answerFirst": true|false,
+          "useRag": true|false,
+          "preferWebSearch": true|false,
+          "showPropertyContext": true|false,
+          "decisionSupport": true|false,
+          "needsQualification": true|false,
+          "reason": "short reason"
+        }
+
+        Rules:
+        - If user asks about differences/comparison/best option or says they are not sure, prefer DECISION_SUPPORT.
+        - If user asks for property availability, units under budget, projects, or a shortlist, prefer RAG_ANSWER.
+        - If user asks area/community information or general advice, prefer DIRECT_ANSWER.
+        - If current/up-to-date info is likely needed, prefer WEB_SEARCH.
+        - If enough details are missing for personalized recommendations, set needsQualification=true.
+        - Be conservative with WEB_SEARCH; use it only when freshness matters.
         """;
 
     private static final String AMOUNT_REGEX =
@@ -114,9 +160,13 @@ public class RealEstateChatService {
     private static final Pattern PHONE_PATTERN = Pattern.compile("(?:(?:\\+|00)\\d{1,3}[\\s-]?)?\\d[\\d\\s-]{6,}");
     private static final Pattern ANY_AMOUNT_PATTERN = Pattern.compile("(?i)" + AMOUNT_REGEX);
     private static final Pattern PROPERTY_TYPE_PATTERN = Pattern.compile("(?i)\\b(apartment|apts?|flat|villa|townhouse|penthouse)\\b");
+    private static final Pattern MARINA_WORD_PATTERN = Pattern.compile("(?i)\\bmarina\\b");
     private static final Pattern FENCED_JSON_PATTERN = Pattern.compile("(?is)^```(?:json)?\\s*(.*?)\\s*```$");
     private static final int MAX_CONVERSATION_HISTORY_MESSAGES = 6;
     private static final int MAX_HISTORY_MESSAGE_CHARS = 400;
+    private static final int MAX_WEB_RESULTS_IN_CONTEXT = 5;
+    private static final int MAX_WEB_SOURCES_IN_REPLY = 4;
+    private static final int MAX_WEB_QUERY_CHARS = 320;
 
     // Known UAE locations for extraction
     private static final Set<String> KNOWN_CITIES = Set.of(
@@ -175,6 +225,7 @@ public class RealEstateChatService {
     private final ContactLeadService contactLeadService;
     private final OpenAiClient openAiClient;
     private final QdrantClient qdrantClient;
+    private final WebSearchClient webSearchClient;
     private final ObjectMapper objectMapper;
 
     public RealEstateChatService(
@@ -183,6 +234,7 @@ public class RealEstateChatService {
         ContactLeadService contactLeadService,
         OpenAiClient openAiClient,
         QdrantClient qdrantClient,
+        WebSearchClient webSearchClient,
         ObjectMapper objectMapper
     ) {
         this.applicationProperties = applicationProperties;
@@ -190,6 +242,7 @@ public class RealEstateChatService {
         this.contactLeadService = contactLeadService;
         this.openAiClient = openAiClient;
         this.qdrantClient = qdrantClient;
+        this.webSearchClient = webSearchClient;
         this.objectMapper = objectMapper;
     }
 
@@ -231,17 +284,29 @@ public class RealEstateChatService {
         // even if the model returns malformed JSON or omits structured fields.
         extractInformationFromMessage(userMessage, state);
 
-        // Step 1: Build conversation context for ChatGPT
-        String conversationContext = buildConversationContext(state, userMessage, conversationHistory);
+        TurnRoutingDecision routingDecision = classifyTurnRouting(userMessage, state, conversationHistory);
+        List<WebSearchClient.WebSearchResult> webResults = routingDecision.shouldRunWebSearch()
+            ? performLiveWebSearch(userMessage, state, conversationHistory, routingDecision)
+            : Collections.emptyList();
 
-        // Step 2: Perform semantic search using RAG if we have enough context
-        List<PropertyContextDTO> ragResults = performSemanticSearch(state, userMessage);
+        // Step 1: Build conversation context for ChatGPT
+        String conversationContext = buildConversationContext(state, userMessage, conversationHistory, routingDecision);
+
+        // Step 2: Perform semantic search using RAG if we have enough context,
+        // or if the user is asking for area info / general suggestions.
+        boolean readyForRecommendations = state.hasRecommendationRequirements();
+        boolean exploratoryQuery = routingDecision.isExplorationOrInformation();
+        boolean allowEarlySearch = readyForRecommendations || routingDecision.allowEarlySearch();
+        List<PropertyContextDTO> ragResults = allowEarlySearch
+            ? filterResultsByLocationPreference(performSemanticSearch(state, userMessage), state)
+            : Collections.emptyList();
 
         // Step 3: Build property context for ChatGPT
         String propertyContext = buildPropertyContext(ragResults);
+        String webSearchContext = buildWebSearchContext(webResults);
 
         // Step 4: Call ChatGPT for intelligent response
-        String fullContext = conversationContext + "\n\n" + propertyContext;
+        String fullContext = conversationContext + "\n\n" + propertyContext + "\n\n" + webSearchContext;
         String aiResponse = callChatGPT(fullContext, userMessage);
 
         // Step 5: Parse AI response and extract structured data
@@ -250,9 +315,21 @@ public class RealEstateChatService {
         // Step 6: Update state with extracted information
         updateStateFromAI(state, parsedResponse);
 
+        readyForRecommendations = state.hasRecommendationRequirements();
+        allowEarlySearch = readyForRecommendations || routingDecision.allowEarlySearch();
+
+        // If AI extracted the missing requirements, run search now.
+        if (allowEarlySearch && CollectionUtils.isEmpty(ragResults)) {
+            ragResults = StringUtils.hasText(parsedResponse.searchQuery)
+                ? performSemanticSearchWithQuery(parsedResponse.searchQuery)
+                : performSemanticSearch(state, userMessage);
+            ragResults = filterResultsByLocationPreference(ragResults, state);
+        }
+
         // Step 7: If AI suggests more properties, search again with refined criteria
-        if (StringUtils.hasText(parsedResponse.searchQuery) && ragResults.size() < 3) {
+        if (allowEarlySearch && StringUtils.hasText(parsedResponse.searchQuery) && ragResults.size() < 3) {
             ragResults = mergePropertyContexts(ragResults, performSemanticSearchWithQuery(parsedResponse.searchQuery));
+            ragResults = filterResultsByLocationPreference(ragResults, state);
         }
 
         // Step 8: Handle lead capture if user is ready
@@ -261,12 +338,22 @@ public class RealEstateChatService {
         }
 
         // Step 9: Combine database results with RAG results for comprehensive coverage
-        List<PropertyContextDTO> combinedResults = combineResults(ragResults, state);
+        boolean exposePropertyContext = shouldExposePropertyContext(userMessage, state, routingDecision);
+        List<PropertyContextDTO> combinedResults = exposePropertyContext && allowEarlySearch
+            ? combineResults(ragResults, state)
+            : Collections.emptyList();
+        String reply = alignReplyWithConsultativeFlow(parsedResponse.message, state, userMessage, routingDecision);
+        reply = appendWebSourcesToReply(reply, webResults, routingDecision);
 
-        return ConversationStepResult.of(parsedResponse.message, combinedResults, state, false);
+        return ConversationStepResult.of(reply, combinedResults, state, false);
     }
 
-    private String buildConversationContext(AgentState state, String userMessage, List<ConversationTurn> conversationHistory) {
+    private String buildConversationContext(
+        AgentState state,
+        String userMessage,
+        List<ConversationTurn> conversationHistory,
+        TurnRoutingDecision routingDecision
+    ) {
         StringBuilder context = new StringBuilder();
         context.append("Current conversation state:\n");
 
@@ -308,6 +395,27 @@ public class RealEstateChatService {
         }
 
         context.append("\nConversation stage: ").append(state.getStage().name());
+        context.append("\nCore qualification complete: ").append(state.hasRecommendationRequirements() ? "YES" : "NO");
+        context.append("\nRouter mode: ").append(routingDecision.mode());
+        context.append("\nRouter answer first: ").append(routingDecision.answerFirst() ? "YES" : "NO");
+        context.append("\nRouter use RAG: ").append(routingDecision.useRag() ? "YES" : "NO");
+        context.append("\nRouter prefer web search: ").append(routingDecision.preferWebSearch() ? "YES" : "NO");
+        if (routingDecision.preferWebSearch()) {
+            context.append(
+                "\nTooling note: Live web search is enabled when available; include source links in the final answer when web results are used."
+            );
+        }
+        context.append("\nExploration/info query: ").append(routingDecision.isExplorationOrInformation() ? "YES" : "NO");
+        if (!state.hasRecommendationRequirements()) {
+            context.append("\nMissing requirements: ").append(describeMissingRequirements(state));
+            if (routingDecision.isExplorationOrInformation()) {
+                context.append(
+                    "\nInstruction: Answer the user's area/info/suggestion question first, then ask one follow-up question to continue qualification."
+                );
+            } else {
+                context.append("\nInstruction: Ask for the next missing requirement before recommending specific properties.");
+            }
+        }
 
         return context.toString();
     }
@@ -463,11 +571,12 @@ public class RealEstateChatService {
         }
         if (StringUtils.hasText(aiData.location)) {
             // Check if it's a city or area
-            String lower = aiData.location.toLowerCase(Locale.ENGLISH);
+            String normalizedLocation = normalizeAreaAlias(aiData.location, null);
+            String lower = normalizedLocation.toLowerCase(Locale.ENGLISH);
             if (KNOWN_CITIES.contains(lower)) {
-                state.setCity(capitalize(aiData.location));
+                state.setCity(capitalize(normalizedLocation));
             } else {
-                state.setArea(capitalize(aiData.location));
+                state.setArea(capitalize(normalizedLocation));
             }
         }
         if (StringUtils.hasText(aiData.propertyType)) {
@@ -610,11 +719,11 @@ public class RealEstateChatService {
 
     private List<PropertyContextDTO> combineResults(List<PropertyContextDTO> ragResults, AgentState state) {
         // Start with RAG results
-        List<PropertyContextDTO> combined = new ArrayList<>(ragResults);
+        List<PropertyContextDTO> combined = new ArrayList<>(filterResultsByLocationPreference(ragResults, state));
 
         // If RAG didn't find enough, supplement with database query
         if (combined.size() < 5) {
-            List<PropertyContextDTO> dbResults = findMatchingProperties(state);
+            List<PropertyContextDTO> dbResults = filterResultsByLocationPreference(findMatchingProperties(state), state);
             for (PropertyContextDTO dbResult : dbResults) {
                 boolean alreadyExists = combined.stream().anyMatch(r -> Objects.equals(r.getExtId(), dbResult.getExtId()));
                 if (!alreadyExists) {
@@ -625,6 +734,68 @@ public class RealEstateChatService {
         }
 
         return combined.stream().limit(5).toList();
+    }
+
+    private List<PropertyContextDTO> filterResultsByLocationPreference(List<PropertyContextDTO> results, AgentState state) {
+        if (CollectionUtils.isEmpty(results) || state == null || !state.hasLocationRequirement()) {
+            return CollectionUtils.isEmpty(results) ? Collections.emptyList() : results;
+        }
+
+        List<PropertyContextDTO> filtered = results.stream().filter(dto -> matchesStateLocationPreference(dto, state)).toList();
+        return filtered.isEmpty() ? results : filtered;
+    }
+
+    private boolean matchesStateLocationPreference(PropertyContextDTO dto, AgentState state) {
+        if (dto == null || state == null) {
+            return false;
+        }
+
+        String dtoArea = normalizeLocationToken(dto.getArea());
+        String dtoCity = normalizeLocationToken(dto.getCity());
+        String combined = (dtoArea + " " + dtoCity).trim();
+
+        if (StringUtils.hasText(state.getArea())) {
+            String stateArea = normalizeLocationToken(normalizeAreaAlias(state.getArea(), state.getCity()));
+            if (!StringUtils.hasText(stateArea)) {
+                return true;
+            }
+
+            if (dtoArea.contains(stateArea) || combined.contains(stateArea)) {
+                return true;
+            }
+
+            return allLocationTokensPresent(stateArea, combined);
+        }
+
+        if (StringUtils.hasText(state.getCity())) {
+            String stateCity = normalizeLocationToken(state.getCity());
+            if (!StringUtils.hasText(stateCity)) {
+                return true;
+            }
+            return dtoCity.contains(stateCity) || combined.contains(stateCity) || allLocationTokensPresent(stateCity, combined);
+        }
+
+        return true;
+    }
+
+    private boolean allLocationTokensPresent(String expected, String actual) {
+        if (!StringUtils.hasText(expected) || !StringUtils.hasText(actual)) {
+            return false;
+        }
+        List<String> tokens = Arrays.stream(expected.split("\\s+"))
+            .map(String::trim)
+            .filter(StringUtils::hasText)
+            .filter(token -> token.length() > 1)
+            .toList();
+        if (tokens.isEmpty()) {
+            return false;
+        }
+        for (String token : tokens) {
+            if (!actual.contains(token)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private List<PropertyContextDTO> mergePropertyContexts(List<PropertyContextDTO> primary, List<PropertyContextDTO> secondary) {
@@ -676,11 +847,17 @@ public class RealEstateChatService {
         // Extract information from user message
         extractInformationFromMessage(userMessage, state);
 
+        TurnRoutingDecision routingDecision = classifyTurnRouting(userMessage, state, Collections.emptyList());
+
         // Find matching properties
-        List<PropertyContextDTO> contextEntries = findMatchingProperties(state);
+        boolean readyForRecommendations = state.hasRecommendationRequirements();
+        boolean exploratoryQuery = routingDecision.isExplorationOrInformation();
+        List<PropertyContextDTO> contextEntries = readyForRecommendations || exploratoryQuery
+            ? filterResultsByLocationPreference(findMatchingProperties(state), state)
+            : Collections.emptyList();
 
         // Build response based on state
-        String reply = buildRuleBasedResponse(state, contextEntries, userMessage);
+        String reply = buildRuleBasedResponse(state, contextEntries, userMessage, routingDecision);
 
         return ConversationStepResult.of(reply, contextEntries, state, false);
     }
@@ -712,11 +889,18 @@ public class RealEstateChatService {
         }
     }
 
-    private String buildRuleBasedResponse(AgentState state, List<PropertyContextDTO> properties, String userMessage) {
+    private String buildRuleBasedResponse(
+        AgentState state,
+        List<PropertyContextDTO> properties,
+        String userMessage,
+        TurnRoutingDecision routingDecision
+    ) {
         StringBuilder response = new StringBuilder();
+        boolean readyForRecommendations = state.hasRecommendationRequirements();
+        boolean exploratoryQuery = routingDecision.isExplorationOrInformation();
 
         // If we found properties, show them
-        if (!CollectionUtils.isEmpty(properties)) {
+        if ((readyForRecommendations || exploratoryQuery) && !CollectionUtils.isEmpty(properties)) {
             if (state.hasBudget()) {
                 response.append("Here are some options within your budget of ").append(formatAed(state.getBudgetMaxAed())).append(":\n\n");
             } else {
@@ -741,18 +925,801 @@ public class RealEstateChatService {
             response.append("\n");
         }
 
-        // Ask qualifying questions based on what's missing
-        if (!state.hasBudget()) {
-            response.append("To help you find the perfect property, what's your approximate budget in AED?");
-        } else if (!state.hasPurpose()) {
-            response.append("Great! Are you looking to buy for investment, rental income, or personal use?");
-        } else if (!StringUtils.hasText(state.getCity()) && !StringUtils.hasText(state.getArea())) {
-            response.append("Any preferred locations? Popular choices include Dubai Marina, Downtown Dubai, or Palm Jumeirah.");
+        // Ask qualifying questions based on what's missing before recommending from the catalog.
+        if (!readyForRecommendations) {
+            if (response.length() > 0) {
+                response.append("\n");
+            }
+            response.append(alignReplyWithConsultativeFlow(null, state, userMessage, routingDecision));
         } else if (!state.isInterestConfirmed()) {
             response.append("Would you like me to connect you with one of our property advisors for more details?");
         }
 
         return response.toString();
+    }
+
+    private List<WebSearchClient.WebSearchResult> performLiveWebSearch(
+        String userMessage,
+        AgentState state,
+        List<ConversationTurn> conversationHistory,
+        TurnRoutingDecision routingDecision
+    ) {
+        if (webSearchClient == null || !webSearchClient.isEnabled() || !routingDecision.shouldRunWebSearch()) {
+            return Collections.emptyList();
+        }
+
+        String webQuery = buildLiveWebSearchQuery(userMessage, state, conversationHistory, routingDecision);
+        if (!StringUtils.hasText(webQuery)) {
+            return Collections.emptyList();
+        }
+
+        List<WebSearchClient.WebSearchResult> results = webSearchClient.search(webQuery, MAX_WEB_RESULTS_IN_CONTEXT);
+        if (CollectionUtils.isEmpty(results) && !Objects.equals(webQuery, userMessage)) {
+            // Fallback to the raw user query if the contextual query was too specific.
+            results = webSearchClient.search(truncateForSearchQuery(userMessage), MAX_WEB_RESULTS_IN_CONTEXT);
+        }
+        return CollectionUtils.isEmpty(results) ? Collections.emptyList() : results;
+    }
+
+    private String buildLiveWebSearchQuery(
+        String userMessage,
+        AgentState state,
+        List<ConversationTurn> conversationHistory,
+        TurnRoutingDecision routingDecision
+    ) {
+        if (!StringUtils.hasText(userMessage)) {
+            return null;
+        }
+
+        StringBuilder query = new StringBuilder(userMessage.trim());
+
+        if (state != null) {
+            if (state.hasLocationRequirement()) {
+                query.append(" ");
+                if (StringUtils.hasText(state.getArea())) {
+                    query.append(state.getArea()).append(" ");
+                }
+                if (StringUtils.hasText(state.getCity())) {
+                    query.append(state.getCity()).append(" ");
+                }
+            }
+            if (state.hasPurpose()) {
+                query.append(" uae real estate ").append(humanizePurpose(state.getPurpose()));
+            }
+        }
+
+        if (routingDecision != null && routingDecision.decisionSupport()) {
+            query.append(" compare communities investment dubai uae");
+        } else if (routingDecision != null && routingDecision.preferWebSearch()) {
+            query.append(" UAE real estate latest");
+        }
+
+        if (isContextDependentFollowUp(userMessage)) {
+            String historyContext = buildHistoryContextForSearch(conversationHistory);
+            if (StringUtils.hasText(historyContext)) {
+                query.append(" ").append(historyContext);
+            }
+        }
+
+        return truncateForSearchQuery(query.toString());
+    }
+
+    private boolean isContextDependentFollowUp(String userMessage) {
+        if (!StringUtils.hasText(userMessage)) {
+            return false;
+        }
+        String normalized = userMessage.trim().toLowerCase(Locale.ENGLISH);
+        if (normalized.length() > 40) {
+            return false;
+        }
+        return containsAny(
+            normalized,
+            "what are differences",
+            "what are the differences",
+            "what are diffrences",
+            "difference",
+            "differences",
+            "compare",
+            "which one",
+            "better",
+            "not sure",
+            "which is best"
+        );
+    }
+
+    private String buildHistoryContextForSearch(List<ConversationTurn> conversationHistory) {
+        if (CollectionUtils.isEmpty(conversationHistory)) {
+            return null;
+        }
+
+        List<ConversationTurn> recentTurns = conversationHistory.subList(
+            Math.max(0, conversationHistory.size() - 3),
+            conversationHistory.size()
+        );
+        List<String> fragments = new ArrayList<>();
+
+        for (ConversationTurn turn : recentTurns) {
+            if (!"user".equals(turn.role()) && !"assistant".equals(turn.role())) {
+                continue;
+            }
+            String content = truncatePromptText(turn.content(), 140);
+            if (StringUtils.hasText(content)) {
+                fragments.add(content);
+            }
+        }
+
+        if (fragments.isEmpty()) {
+            return null;
+        }
+
+        String combined = String.join(" ", fragments);
+        return truncateForSearchQuery(combined);
+    }
+
+    private String truncateForSearchQuery(String query) {
+        if (!StringUtils.hasText(query)) {
+            return null;
+        }
+        String normalized = query.trim().replaceAll("\\s+", " ");
+        if (normalized.length() <= MAX_WEB_QUERY_CHARS) {
+            return normalized;
+        }
+        return normalized.substring(0, MAX_WEB_QUERY_CHARS).trim();
+    }
+
+    private String buildWebSearchContext(List<WebSearchClient.WebSearchResult> webResults) {
+        if (CollectionUtils.isEmpty(webResults)) {
+            return "Live web search results: none used for this turn.";
+        }
+
+        StringBuilder context = new StringBuilder("Live web search results (up-to-date external sources):\n");
+        int limit = Math.min(MAX_WEB_RESULTS_IN_CONTEXT, webResults.size());
+        for (int i = 0; i < limit; i++) {
+            WebSearchClient.WebSearchResult result = webResults.get(i);
+            context.append(i + 1).append(". ");
+            context.append(StringUtils.hasText(result.title()) ? result.title() : "Source");
+            if (StringUtils.hasText(result.url())) {
+                context.append("\n   URL: ").append(result.url());
+            }
+            if (StringUtils.hasText(result.snippet())) {
+                context.append("\n   Snippet: ").append(result.snippet());
+            }
+            context.append("\n");
+        }
+        context.append("Use these results for current facts and mention source links in the answer when relying on web info.");
+        return context.toString();
+    }
+
+    private String appendWebSourcesToReply(
+        String reply,
+        List<WebSearchClient.WebSearchResult> webResults,
+        TurnRoutingDecision routingDecision
+    ) {
+        if (
+            !StringUtils.hasText(reply) ||
+            CollectionUtils.isEmpty(webResults) ||
+            routingDecision == null ||
+            !routingDecision.preferWebSearch()
+        ) {
+            return reply;
+        }
+
+        String lower = reply.toLowerCase(Locale.ENGLISH);
+        if (lower.contains("sources:") || lower.contains("source:")) {
+            return reply;
+        }
+
+        LinkedHashSet<String> seenUrls = new LinkedHashSet<>();
+        StringBuilder builder = new StringBuilder(reply.trim());
+        builder.append("\n\nSources:\n");
+
+        int added = 0;
+        for (WebSearchClient.WebSearchResult result : webResults) {
+            if (result == null || !StringUtils.hasText(result.url()) || !seenUrls.add(result.url())) {
+                continue;
+            }
+            String label = StringUtils.hasText(result.title())
+                ? result.title()
+                : Objects.requireNonNullElse(result.displayUrl(), result.url());
+            builder.append("- ").append(label).append(": ").append(result.url()).append("\n");
+            added++;
+            if (added >= MAX_WEB_SOURCES_IN_REPLY) {
+                break;
+            }
+        }
+
+        return added > 0 ? builder.toString().trim() : reply;
+    }
+
+    private TurnRoutingDecision classifyTurnRouting(String userMessage, AgentState state, List<ConversationTurn> conversationHistory) {
+        if (!StringUtils.hasText(userMessage)) {
+            return heuristicRoutingDecision(userMessage, state);
+        }
+
+        try {
+            String routingContext = buildRoutingClassifierContext(state, conversationHistory);
+            String routingResponse = openAiClient.chat(ROUTING_PROMPT, routingContext, userMessage);
+            TurnRoutingDecision decision = parseTurnRoutingDecision(routingResponse, state);
+            return decision;
+        } catch (Exception ex) {
+            LOG.warn("LLM routing classifier failed, using heuristic fallback: {}", ex.getMessage());
+            return heuristicRoutingDecision(userMessage, state);
+        }
+    }
+
+    private String buildRoutingClassifierContext(AgentState state, List<ConversationTurn> conversationHistory) {
+        StringBuilder context = new StringBuilder();
+        context.append("Current qualification state:\n");
+        if (state != null) {
+            context
+                .append("- Qualified for personalized shortlist: ")
+                .append(state.hasRecommendationRequirements() ? "YES" : "NO")
+                .append("\n");
+            if (state.hasBudget()) {
+                context.append("- Budget: ").append(formatAed(state.getBudgetMaxAed())).append("\n");
+            }
+            if (state.hasPurpose()) {
+                context.append("- Purpose: ").append(state.getPurpose()).append("\n");
+            }
+            if (state.hasLocationRequirement()) {
+                context
+                    .append("- Location: ")
+                    .append(
+                        String.join(", ", Arrays.asList(state.getArea(), state.getCity()).stream().filter(StringUtils::hasText).toList())
+                    )
+                    .append("\n");
+            }
+            if (state.hasPropertyTypePreference()) {
+                context.append("- Property type: ").append(state.getPropertyType()).append("\n");
+            }
+            if (state.hasTimelineRequirement()) {
+                context.append("- Timeline: ");
+                if (StringUtils.hasText(state.getPlan())) {
+                    context.append(state.getPlan());
+                } else {
+                    context.append(
+                        String.join(
+                            " to ",
+                            Arrays.asList(state.getCompletionYearFrom(), state.getCompletionYearTo())
+                                .stream()
+                                .filter(Objects::nonNull)
+                                .map(String::valueOf)
+                                .toList()
+                        )
+                    );
+                }
+                context.append("\n");
+            }
+        }
+
+        if (!CollectionUtils.isEmpty(conversationHistory)) {
+            context.append("\nRecent messages:\n");
+            int fromIndex = Math.max(0, conversationHistory.size() - 4);
+            for (ConversationTurn turn : conversationHistory.subList(fromIndex, conversationHistory.size())) {
+                context.append("- ").append(turn.role()).append(": ").append(turn.content()).append("\n");
+            }
+        }
+
+        return context.toString();
+    }
+
+    private TurnRoutingDecision parseTurnRoutingDecision(String routingResponse, AgentState state) throws JsonProcessingException {
+        JsonNode root = objectMapper.readTree(extractJsonCandidate(routingResponse));
+
+        String mode = Optional.ofNullable(root.get("mode")).map(JsonNode::asText).orElse("QUALIFY_FIRST");
+        mode = mode.trim().toUpperCase(Locale.ENGLISH);
+
+        boolean answerFirst = readBooleanOrDefault(root, "answerFirst", false);
+        boolean useRag = readBooleanOrDefault(root, "useRag", false);
+        boolean preferWebSearch = readBooleanOrDefault(root, "preferWebSearch", false);
+        boolean showPropertyContext = readBooleanOrDefault(root, "showPropertyContext", false);
+        boolean decisionSupport = readBooleanOrDefault(root, "decisionSupport", false);
+        boolean needsQualification = readBooleanOrDefault(
+            root,
+            "needsQualification",
+            state == null || !state.hasRecommendationRequirements()
+        );
+        String reason = Optional.ofNullable(root.get("reason")).map(JsonNode::asText).orElse(null);
+
+        if ("DECISION_SUPPORT".equals(mode)) {
+            decisionSupport = true;
+            answerFirst = true;
+        } else if ("DIRECT_ANSWER".equals(mode)) {
+            answerFirst = true;
+        } else if ("RAG_ANSWER".equals(mode)) {
+            useRag = true;
+            showPropertyContext = true;
+        } else if ("WEB_SEARCH".equals(mode)) {
+            preferWebSearch = true;
+            answerFirst = true;
+        } else if (!"QUALIFY_FIRST".equals(mode)) {
+            mode = "QUALIFY_FIRST";
+        }
+
+        if (state != null && state.hasRecommendationRequirements()) {
+            // Once fully qualified, prefer using RAG/catalog for personalization unless the router explicitly avoids it.
+            useRag = useRag || "QUALIFY_FIRST".equals(mode);
+            showPropertyContext = showPropertyContext || useRag;
+            needsQualification = false;
+        }
+
+        return new TurnRoutingDecision(
+            mode,
+            answerFirst,
+            useRag,
+            preferWebSearch,
+            showPropertyContext,
+            decisionSupport,
+            needsQualification,
+            reason
+        );
+    }
+
+    private boolean readBooleanOrDefault(JsonNode root, String fieldName, boolean defaultValue) {
+        return root.has(fieldName) && !root.get(fieldName).isNull() ? root.get(fieldName).asBoolean(defaultValue) : defaultValue;
+    }
+
+    private TurnRoutingDecision heuristicRoutingDecision(String userMessage, AgentState state) {
+        boolean decisionSupport = isDecisionSupportTurnHeuristic(userMessage, state);
+        boolean recommendation = isRecommendationOrPropertyQueryHeuristic(userMessage, state);
+        boolean exploration = isExplorationOrInformationQueryHeuristic(userMessage, state) || decisionSupport;
+        boolean qualified = state != null && state.hasRecommendationRequirements();
+
+        String mode;
+        if (decisionSupport) {
+            mode = "DECISION_SUPPORT";
+        } else if (recommendation) {
+            mode = "RAG_ANSWER";
+        } else if (exploration) {
+            mode = "DIRECT_ANSWER";
+        } else {
+            mode = "QUALIFY_FIRST";
+        }
+
+        boolean useRag = recommendation || (qualified && exploration);
+        boolean showPropertyContext = recommendation || qualified;
+        boolean answerFirst = exploration || decisionSupport;
+        boolean needsQualification = !qualified;
+
+        return new TurnRoutingDecision(
+            mode,
+            answerFirst,
+            useRag,
+            false,
+            showPropertyContext,
+            decisionSupport,
+            needsQualification,
+            "heuristic_fallback"
+        );
+    }
+
+    private boolean shouldExposePropertyContext(String userMessage, AgentState state, TurnRoutingDecision routingDecision) {
+        if (state == null) {
+            return false;
+        }
+        return state.hasRecommendationRequirements() || routingDecision.isRecommendationOrProperty();
+    }
+
+    // Heuristic fallback only (used when LLM routing classification fails).
+    private boolean isExplorationOrInformationQueryHeuristic(String userMessage, AgentState state) {
+        if (!StringUtils.hasText(userMessage)) {
+            return false;
+        }
+        String lower = userMessage.toLowerCase(Locale.ENGLISH);
+
+        if (containsAny(lower, "area info", "area information", "neighborhood", "community", "location info", "tell me about", "compare")) {
+            return true;
+        }
+
+        if (
+            containsAny(
+                lower,
+                "suggest",
+                "recommend",
+                "recommendation",
+                "best area",
+                "which area",
+                "where should",
+                "good area",
+                "good place",
+                "options",
+                "ideas"
+            )
+        ) {
+            return true;
+        }
+
+        if (containsAny(lower, "roi", "rental yield", "capital appreciation", "family-friendly", "family friendly", "schools")) {
+            return true;
+        }
+
+        if (
+            (containsAny(lower, "about", "is ") && hasLocationMention(userMessage, state)) ||
+            containsAny(lower, "pros and cons", "vs ", " versus ")
+        ) {
+            return true;
+        }
+
+        return isRecommendationOrPropertyQueryHeuristic(userMessage, state);
+    }
+
+    // Heuristic fallback only (used when LLM routing classification fails).
+    private boolean isRecommendationOrPropertyQueryHeuristic(String userMessage, AgentState state) {
+        if (!StringUtils.hasText(userMessage)) {
+            return false;
+        }
+        String lower = userMessage.toLowerCase(Locale.ENGLISH);
+
+        if (
+            containsAny(
+                lower,
+                "property",
+                "properties",
+                "project",
+                "projects",
+                "listing",
+                "listings",
+                "launch",
+                "launching",
+                "off-plan",
+                "off plan",
+                "show me",
+                "find me"
+            )
+        ) {
+            return true;
+        }
+
+        if (containsAny(lower, "recommend", "recommendation", "suggest", "suggestion")) {
+            return true;
+        }
+
+        return (
+            hasLocationMention(userMessage, state) && containsAny(lower, "what's available", "what is available", "options", "available")
+        );
+    }
+
+    private boolean hasLocationMention(String userMessage, AgentState state) {
+        if ((state != null && state.hasLocationRequirement()) || !StringUtils.hasText(userMessage)) {
+            return state != null && state.hasLocationRequirement();
+        }
+
+        String lower = userMessage.toLowerCase(Locale.ENGLISH);
+        for (String area : KNOWN_AREAS) {
+            if (lower.contains(area)) {
+                return true;
+            }
+        }
+        for (String city : KNOWN_CITIES) {
+            if (lower.contains(city)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private String buildDecisionSupportReply(String aiMessage, AgentState state, String userMessage, TurnRoutingDecision routingDecision) {
+        if (!isDecisionSupportTurn(userMessage, state, routingDecision)) {
+            return null;
+        }
+
+        // Let the AI response pass through if it already provides guidance and is not just repeating qualification questions.
+        if (StringUtils.hasText(aiMessage) && !isLikelyQualificationLoop(aiMessage, state)) {
+            return null;
+        }
+
+        String summary = buildQualificationSummary(state);
+        String guidance = buildDecisionSupportGuidance(state);
+        String followUp = buildDecisionSupportFollowUpQuestion(state);
+
+        StringBuilder reply = new StringBuilder();
+        if (StringUtils.hasText(summary)) {
+            reply.append(summary).append(" ");
+        }
+        reply.append(guidance);
+        if (StringUtils.hasText(followUp)) {
+            reply.append(" ").append(followUp);
+        }
+        return reply.toString().trim();
+    }
+
+    private boolean isDecisionSupportTurn(String userMessage, AgentState state, TurnRoutingDecision routingDecision) {
+        if (routingDecision != null) {
+            return routingDecision.decisionSupport();
+        }
+        return isDecisionSupportTurnHeuristic(userMessage, state);
+    }
+
+    // Heuristic fallback only (used when LLM routing classification fails).
+    private boolean isDecisionSupportTurnHeuristic(String userMessage, AgentState state) {
+        if (!StringUtils.hasText(userMessage) || state == null || state.hasRecommendationRequirements()) {
+            return false;
+        }
+        String lower = userMessage.toLowerCase(Locale.ENGLISH);
+
+        if (containsAny(lower, "not sure", "unsure", "don't know", "dont know", "you decide", "anything is fine", "no preference")) {
+            return true;
+        }
+
+        return containsAny(
+            lower,
+            "which one better",
+            "which one is better",
+            "whitch one better",
+            "what is better",
+            "what are differences",
+            "what are the differences",
+            "what are diffrences",
+            "what are the diffrences",
+            "difference",
+            "differences",
+            "diffrence",
+            "diffrences",
+            "how are they different",
+            "how do they differ",
+            "compare them",
+            "comparison",
+            "better option",
+            "best option",
+            "which is best"
+        );
+    }
+
+    private boolean isLikelyQualificationLoop(String aiMessage, AgentState state) {
+        if (!StringUtils.hasText(aiMessage)) {
+            return true;
+        }
+        String lower = aiMessage.toLowerCase(Locale.ENGLISH);
+        if (!aiMessageAlreadyAsksCurrentQualification(aiMessage, state)) {
+            return false;
+        }
+        return !containsAny(lower, "depends", "typically", "generally", "for investment", "for end-use", "because", "better");
+    }
+
+    private String buildDecisionSupportGuidance(AgentState state) {
+        if (state == null) {
+            return "I can help narrow it down quickly by comparing options based on budget, goal, and timing.";
+        }
+
+        String purpose = Optional.ofNullable(state.getPurpose()).orElse("").toUpperCase(Locale.ENGLISH);
+        boolean hasBudget = state.hasBudget();
+        boolean hasLocation = state.hasLocationRequirement();
+        boolean hasType = state.hasPropertyTypePreference();
+
+        if ("INVESTMENT".equals(purpose) || "INVEST".equals(purpose)) {
+            if (!hasLocation) {
+                String budgetText = hasBudget ? " at " + formatAed(state.getBudgetMaxAed()) + " budget" : "";
+                if (!hasType) {
+                    return (
+                        "For investment" +
+                        budgetText +
+                        ", apartments are usually the safer starting point because they have better liquidity and broader rental demand. " +
+                        "A practical comparison to start with is: JVC (strong tenant demand and many options), Town Square (good value and family tenant appeal), and Dubai Silicon Oasis (value-focused entry and steady rental demand). " +
+                        "If you want one default starting point, begin with JVC for balance of demand and resale liquidity."
+                    );
+                }
+                return (
+                    "For investment" +
+                    budgetText +
+                    ", a good way to decide is by strategy: JVC for balanced rental demand and liquidity, Town Square for value and family tenants, and Dubai Silicon Oasis for budget-conscious yield-focused buyers. " +
+                    "If you are undecided, JVC is usually the safest first area to evaluate."
+                );
+            }
+
+            if (!hasType) {
+                return (
+                    "For investment in " +
+                    String.join(", ", Arrays.asList(state.getArea(), state.getCity()).stream().filter(StringUtils::hasText).toList()) +
+                    ", apartments are usually better than villas/townhouses at this stage because entry price is lower, turnover is faster, and rental demand is broader."
+                );
+            }
+
+            if (!state.hasTimelineRequirement()) {
+                return "For investment, the main decision now is yield-now vs appreciation-later: ready units suit immediate rental income, while off-plan may offer stronger upside and payment plan flexibility.";
+            }
+
+            return "For investment, the better option depends on whether you prioritize immediate rental yield, capital appreciation potential, or resale liquidity. I can narrow it down once we pick the main priority.";
+        }
+
+        if ("END_USE".equals(purpose)) {
+            return (
+                "If you're not sure yet, the best option depends on lifestyle priorities: commute access, family amenities/schools, unit size, and whether you want a ready home or off-plan value. " +
+                "I can guide you step by step and suggest matching communities."
+            );
+        }
+
+        if ("RENTAL".equals(purpose)) {
+            return "For rental-income focused buying, the better option is usually the one with stronger tenant demand, better net yield, and easier re-letting rather than just the lowest price.";
+        }
+
+        return "I can compare options for you. The best choice usually depends on your goal (investment vs living), budget flexibility, and whether you want ready or off-plan.";
+    }
+
+    private String buildDecisionSupportFollowUpQuestion(AgentState state) {
+        if (state == null) {
+            return "What should we optimize first: investment return, lifestyle, or lowest entry price?";
+        }
+
+        String purpose = Optional.ofNullable(state.getPurpose()).orElse("").toUpperCase(Locale.ENGLISH);
+        if (("INVESTMENT".equals(purpose) || "INVEST".equals(purpose)) && !state.hasLocationRequirement()) {
+            return "To narrow this down, should I prioritize higher rental yield, stronger capital appreciation, or easier resale/liquidity?";
+        }
+
+        if (!state.hasTimelineRequirement()) {
+            return "Would you prefer a ready unit for immediate rental income, or off-plan for potential appreciation and payment plans?";
+        }
+
+        if (!state.hasPropertyTypePreference()) {
+            return "To narrow this down, would you like me to focus on apartments first (usually better for investment liquidity) or include townhouses/villas as well?";
+        }
+
+        if (!state.hasLocationRequirement()) {
+            return "To personalize the shortlist, should I prioritize higher yield, stronger capital appreciation areas, or family-tenant demand?";
+        }
+
+        return "What matters most for your decision: rental yield, appreciation potential, or ease of resale?";
+    }
+
+    private String alignReplyWithConsultativeFlow(
+        String aiMessage,
+        AgentState state,
+        String userMessage,
+        TurnRoutingDecision routingDecision
+    ) {
+        if (state == null || state.hasRecommendationRequirements()) {
+            return StringUtils.hasText(aiMessage) ? aiMessage : "";
+        }
+
+        String decisionSupportReply = buildDecisionSupportReply(aiMessage, state, userMessage, routingDecision);
+        if (StringUtils.hasText(decisionSupportReply)) {
+            return decisionSupportReply;
+        }
+
+        String nextQuestion = buildNextQualificationQuestion(state);
+        if (!StringUtils.hasText(nextQuestion)) {
+            return StringUtils.hasText(aiMessage) ? aiMessage : "";
+        }
+
+        if (aiMessageAlreadyAsksCurrentQualification(aiMessage, state)) {
+            return aiMessage;
+        }
+
+        String summary = buildQualificationSummary(state);
+        if (!StringUtils.hasText(aiMessage)) {
+            if (StringUtils.hasText(summary)) {
+                return "I can help shortlist properties from our listings. " + summary + " " + nextQuestion;
+            }
+            return "I can help shortlist properties from our listings. " + nextQuestion;
+        }
+
+        StringBuilder reply = new StringBuilder(aiMessage.trim());
+        reply.append("\n\n");
+        if (StringUtils.hasText(summary)) {
+            reply.append(summary).append(" ");
+        }
+        reply.append(nextQuestion);
+        return reply.toString();
+    }
+
+    private String buildQualificationSummary(AgentState state) {
+        List<String> items = new ArrayList<>();
+        if (state.hasBudget()) {
+            items.add("Budget noted (" + formatAed(state.getBudgetMaxAed()) + ").");
+        }
+        if (state.hasPurpose()) {
+            items.add("Purpose noted (" + humanizePurpose(state.getPurpose()) + ").");
+        }
+        if (state.hasLocationRequirement()) {
+            items.add(
+                "Location noted (" +
+                String.join(", ", Arrays.asList(state.getArea(), state.getCity()).stream().filter(StringUtils::hasText).toList()) +
+                ")."
+            );
+        }
+        if (state.hasPropertyTypePreference()) {
+            items.add("Type noted (" + humanizePropertyType(state.getPropertyType()) + ").");
+        }
+        if (state.hasTimelineRequirement()) {
+            items.add("Timeline preference noted.");
+        }
+        if (items.isEmpty()) {
+            return null;
+        }
+        return "So far: " + String.join(" ", items);
+    }
+
+    private String buildNextQualificationQuestion(AgentState state) {
+        if (!state.hasBudget()) {
+            return "What budget range are you targeting in AED (for example, AED 1.5M to AED 2M)?";
+        }
+        if (!state.hasPurpose()) {
+            return "Is this purchase mainly for investment, rental income, or personal/family use?";
+        }
+        if (!state.hasLocationRequirement()) {
+            return "Which area or city do you prefer (for example Dubai Marina, Downtown Dubai, Dubai Hills, or Abu Dhabi)?";
+        }
+        if (!state.hasPropertyTypePreference()) {
+            return "What property type are you looking for: apartment, villa, townhouse, or penthouse?";
+        }
+        if (!state.hasTimelineRequirement()) {
+            return "Do you need a ready property now, or are you open to off-plan with a target handover year?";
+        }
+        return null;
+    }
+
+    private String describeMissingRequirements(AgentState state) {
+        List<String> missing = new ArrayList<>();
+        if (!state.hasBudget()) {
+            missing.add("budget");
+        }
+        if (!state.hasPurpose()) {
+            missing.add("purpose");
+        }
+        if (!state.hasLocationRequirement()) {
+            missing.add("location");
+        }
+        if (!state.hasPropertyTypePreference()) {
+            missing.add("property type");
+        }
+        if (!state.hasTimelineRequirement()) {
+            missing.add("timeline");
+        }
+        return missing.isEmpty() ? "none" : String.join(", ", missing);
+    }
+
+    private boolean aiMessageAlreadyAsksCurrentQualification(String aiMessage, AgentState state) {
+        if (!StringUtils.hasText(aiMessage) || !aiMessage.contains("?")) {
+            return false;
+        }
+        String lower = aiMessage.toLowerCase(Locale.ENGLISH);
+
+        if (!state.hasBudget()) {
+            return containsAny(lower, "budget", "aed", "price range");
+        }
+        if (!state.hasPurpose()) {
+            return containsAny(lower, "investment", "rental", "personal use", "family use", "purpose");
+        }
+        if (!state.hasLocationRequirement()) {
+            return containsAny(lower, "location", "area", "community", "city", "where");
+        }
+        if (!state.hasPropertyTypePreference()) {
+            return containsAny(lower, "property type", "apartment", "villa", "townhouse", "penthouse");
+        }
+        if (!state.hasTimelineRequirement()) {
+            return containsAny(lower, "timeline", "ready", "off-plan", "handover", "when");
+        }
+        return false;
+    }
+
+    private boolean containsAny(String text, String... tokens) {
+        if (!StringUtils.hasText(text) || tokens == null) {
+            return false;
+        }
+        for (String token : tokens) {
+            if (StringUtils.hasText(token) && text.contains(token)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private String humanizePurpose(String purpose) {
+        if (!StringUtils.hasText(purpose)) {
+            return "not specified";
+        }
+        return switch (purpose.trim().toUpperCase(Locale.ENGLISH)) {
+            case "INVESTMENT", "INVEST" -> "investment";
+            case "RENTAL" -> "rental income";
+            case "END_USE" -> "end use";
+            default -> purpose.toLowerCase(Locale.ENGLISH);
+        };
+    }
+
+    private String humanizePropertyType(String propertyType) {
+        if (!StringUtils.hasText(propertyType)) {
+            return "not specified";
+        }
+        return propertyType.trim().toLowerCase(Locale.ENGLISH).replace('_', ' ');
     }
 
     private ConversationStepResult handleLeadCapture(
@@ -829,6 +1796,7 @@ public class RealEstateChatService {
         Page<PropertyDTO> page = propertyQueryService.findByCriteria(criteria, pageable);
 
         List<PropertyContextDTO> contexts = page.getContent().stream().map(this::toPropertyContext).toList();
+        contexts = filterResultsByLocationPreference(contexts, state);
 
         Double budgetMax = state.getBudgetMaxAed();
         if (budgetMax == null) {
@@ -841,7 +1809,7 @@ public class RealEstateChatService {
             return filtered;
         }
 
-        return fallbackByMinPrice(state, budgetMax);
+        return filterResultsByLocationPreference(fallbackByMinPrice(state, budgetMax), state);
     }
 
     private void extractLocation(String message, AgentState state) {
@@ -857,12 +1825,48 @@ public class RealEstateChatService {
             }
         }
 
+        String aliasedArea = normalizeAreaAlias(lower, null);
+        if (StringUtils.hasText(aliasedArea) && !aliasedArea.equals(lower)) {
+            state.setArea(capitalize(aliasedArea));
+            return;
+        }
+
         for (String city : KNOWN_CITIES) {
             if (lower.contains(city)) {
                 state.setCity(capitalize(city));
                 return;
             }
         }
+    }
+
+    private String normalizeAreaAlias(String location, String cityHint) {
+        if (!StringUtils.hasText(location)) {
+            return location;
+        }
+        String lower = location.trim().toLowerCase(Locale.ENGLISH);
+        String normalizedCityHint = cityHint != null ? cityHint.trim().toLowerCase(Locale.ENGLISH) : "";
+
+        // Common shorthand used by users in UAE real estate chats.
+        if (MARINA_WORD_PATTERN.matcher(lower).find()) {
+            boolean explicitAbuDhabi =
+                lower.contains("abu dhabi") || normalizedCityHint.contains("abu dhabi") || lower.contains("al marina");
+            if (!explicitAbuDhabi) {
+                return "dubai marina";
+            }
+        }
+
+        if ("downtown".equals(lower) || lower.contains(" downtown ")) {
+            return "downtown dubai";
+        }
+
+        return lower;
+    }
+
+    private String normalizeLocationToken(String value) {
+        if (!StringUtils.hasText(value)) {
+            return "";
+        }
+        return value.toLowerCase(Locale.ENGLISH).replaceAll("[^a-z0-9\\s]", " ").replaceAll("\\s+", " ").trim();
     }
 
     private String capitalize(String text) {
@@ -1262,6 +2266,33 @@ public class RealEstateChatService {
         String timeline;
     }
 
+    private record TurnRoutingDecision(
+        String mode,
+        boolean answerFirst,
+        boolean useRag,
+        boolean preferWebSearch,
+        boolean showPropertyContext,
+        boolean decisionSupport,
+        boolean needsQualification,
+        String reason
+    ) {
+        boolean allowEarlySearch() {
+            return useRag || showPropertyContext;
+        }
+
+        boolean isExplorationOrInformation() {
+            return answerFirst || decisionSupport || "DIRECT_ANSWER".equals(mode) || "WEB_SEARCH".equals(mode);
+        }
+
+        boolean isRecommendationOrProperty() {
+            return showPropertyContext || useRag || "RAG_ANSWER".equals(mode);
+        }
+
+        boolean shouldRunWebSearch() {
+            return preferWebSearch || "WEB_SEARCH".equals(mode);
+        }
+    }
+
     private record ConversationStepResult(String reply, List<PropertyContextDTO> context, AgentState state, boolean leadCreated) {
         static ConversationStepResult of(String reply, List<PropertyContextDTO> context, AgentState state, boolean leadCreated) {
             state.refreshStage();
@@ -1321,6 +2352,22 @@ public class RealEstateChatService {
 
         boolean hasPlan() {
             return StringUtils.hasText(plan);
+        }
+
+        boolean hasLocationRequirement() {
+            return StringUtils.hasText(city) || StringUtils.hasText(area);
+        }
+
+        boolean hasPropertyTypePreference() {
+            return StringUtils.hasText(propertyType);
+        }
+
+        boolean hasTimelineRequirement() {
+            return hasPlan() || completionYearFrom != null || completionYearTo != null;
+        }
+
+        boolean hasRecommendationRequirements() {
+            return hasBudget() && hasPurpose() && hasLocationRequirement() && hasPropertyTypePreference() && hasTimelineRequirement();
         }
 
         boolean isInterestConfirmed() {

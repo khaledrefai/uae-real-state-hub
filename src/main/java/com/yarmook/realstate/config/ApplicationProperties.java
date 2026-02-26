@@ -123,6 +123,7 @@ public class ApplicationProperties {
         private boolean enabled = true;
         private final OpenAi openAi = new OpenAi();
         private final Qdrant qdrant = new Qdrant();
+        private final WebSearch webSearch = new WebSearch();
         private final Indexer indexer = new Indexer();
 
         public boolean isEnabled() {
@@ -139,6 +140,10 @@ public class ApplicationProperties {
 
         public Qdrant getQdrant() {
             return qdrant;
+        }
+
+        public WebSearch getWebSearch() {
+            return webSearch;
         }
 
         public Indexer getIndexer() {
@@ -289,6 +294,65 @@ public class ApplicationProperties {
 
             public void setPageSize(Integer pageSize) {
                 this.pageSize = pageSize;
+            }
+        }
+
+        public static class WebSearch {
+
+            private boolean enabled = true;
+            private String baseUrl = "https://lite.duckduckgo.com/lite/";
+            private Integer timeoutSeconds = 8;
+            private Integer maxResults = 5;
+            private String region = "wt-wt";
+            private String userAgent =
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36";
+
+            public boolean isEnabled() {
+                return enabled;
+            }
+
+            public void setEnabled(boolean enabled) {
+                this.enabled = enabled;
+            }
+
+            public String getBaseUrl() {
+                return baseUrl;
+            }
+
+            public void setBaseUrl(String baseUrl) {
+                this.baseUrl = baseUrl;
+            }
+
+            public Integer getTimeoutSeconds() {
+                return timeoutSeconds;
+            }
+
+            public void setTimeoutSeconds(Integer timeoutSeconds) {
+                this.timeoutSeconds = timeoutSeconds;
+            }
+
+            public Integer getMaxResults() {
+                return maxResults;
+            }
+
+            public void setMaxResults(Integer maxResults) {
+                this.maxResults = maxResults;
+            }
+
+            public String getRegion() {
+                return region;
+            }
+
+            public void setRegion(String region) {
+                this.region = region;
+            }
+
+            public String getUserAgent() {
+                return userAgent;
+            }
+
+            public void setUserAgent(String userAgent) {
+                this.userAgent = userAgent;
             }
         }
     }

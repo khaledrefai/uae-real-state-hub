@@ -231,6 +231,13 @@ application:
       collection: ${QDRANT_COLLECTION:reelly}
       batch-size: ${QDRANT_BATCH_SIZE:32}
       search-limit: ${QDRANT_SEARCH_LIMIT:12}
+    web-search:
+      enabled: ${AI_WEB_SEARCH_ENABLED:true}
+      base-url: ${AI_WEB_SEARCH_BASE_URL:https://lite.duckduckgo.com/lite/}
+      timeout-seconds: ${AI_WEB_SEARCH_TIMEOUT_SECONDS:8}
+      max-results: ${AI_WEB_SEARCH_MAX_RESULTS:5}
+      region: ${AI_WEB_SEARCH_REGION:wt-wt}
+      user-agent: ${AI_WEB_SEARCH_USER_AGENT:Mozilla/5.0}
     indexer:
       enabled: ${AI_INDEXER_ENABLED:true}
       cron: ${AI_INDEXER_CRON:0 0 3 * * *}

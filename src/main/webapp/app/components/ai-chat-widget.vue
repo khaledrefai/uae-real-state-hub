@@ -1,6 +1,13 @@
 <template>
   <div class="ai-chat-widget">
-    <button class="ai-chat-toggle" type="button" @click="togglePanel" aria-label="Open property assistant">
+    <button
+      class="ai-chat-toggle"
+      type="button"
+      @click="togglePanel"
+      aria-label="Open property assistant"
+      :aria-expanded="isOpen ? 'true' : 'false'"
+      aria-controls="ai-chat-panel"
+    >
       <span class="toggle-icon" aria-hidden="true">
         <svg viewBox="0 0 24 24" focusable="false" role="presentation">
           <path
@@ -18,7 +25,7 @@
     </button>
 
     <transition name="chat-fade">
-      <section v-if="isOpen" class="ai-chat-panel" role="dialog" aria-modal="true">
+      <section v-if="isOpen" id="ai-chat-panel" class="ai-chat-panel" role="dialog" aria-modal="true" aria-labelledby="ai-chat-title">
         <header class="chat-header">
           <div class="bot-branding">
             <span class="bot-avatar" aria-hidden="true">
@@ -32,7 +39,7 @@
               </svg>
             </span>
             <div class="bot-copy">
-              <span class="bot-title">Property bot</span>
+              <span id="ai-chat-title" class="bot-title">Property bot</span>
               <p class="chat-subtitle">Ask about developments, payment plans, or availability.</p>
             </div>
           </div>
@@ -43,110 +50,118 @@
           </div>
         </header>
 
-        <div ref="scrollContainer" class="chat-body">
-          <div v-for="message in messages" :key="message.id" :class="['chat-message', message.role]">
-            <div class="message-bubble">
-              <p v-for="(paragraph, index) in normalizeContent(message.content)" :key="`${message.id}-${index}`">{{ paragraph }}</p>
-            </div>
-          </div>
-          <div v-if="loading" class="chat-message assistant">
-            <div class="message-bubble loading">
-              <span class="dot"></span>
-              <span class="dot"></span>
-              <span class="dot"></span>
-            </div>
-          </div>
-        </div>
-
-        <div v-if="showSuggestions" class="chat-suggestions">
-          <p class="suggestions-label">Try asking:</p>
-          <div class="suggestions-list">
-            <button v-for="prompt in suggestionPrompts" :key="prompt" class="suggestion-chip" type="button" @click="useSuggestion(prompt)">
-              {{ prompt }}
-            </button>
-          </div>
-        </div>
-
-        <transition name="chat-fade">
-          <div v-if="showLeadForm" class="chat-lead-card">
-            <h3>Share your details</h3>
-            <p class="lead-subtitle">I'll connect you with an agent right away.</p>
-            <form ref="leadFormRef" class="lead-form" @submit.prevent="submitLeadDetails">
-              <label class="lead-label" for="leadName">Name</label>
-              <input
-                id="leadName"
-                v-model.trim="leadForm.name"
-                type="text"
-                name="lead-name"
-                autocomplete="name"
-                required
-                :disabled="submittingLead"
-                placeholder="Your full name"
-              />
-
-              <label class="lead-label" for="leadEmail">Email</label>
-              <input
-                id="leadEmail"
-                v-model.trim="leadForm.email"
-                type="email"
-                name="lead-email"
-                autocomplete="email"
-                :disabled="submittingLead"
-                placeholder="you@example.com"
-              />
-
-              <label class="lead-label" for="leadPhone">Phone</label>
-              <input
-                id="leadPhone"
-                v-model.trim="leadForm.phone"
-                type="tel"
-                name="lead-phone"
-                autocomplete="tel"
-                :disabled="submittingLead"
-                placeholder="+971 50 123 4567"
-              />
-
-              <label class="lead-label" for="leadMessage">Notes</label>
-              <textarea
-                id="leadMessage"
-                v-model.trim="leadForm.message"
-                name="lead-message"
-                rows="2"
-                :disabled="submittingLead"
-                placeholder="Optional — tell us what you're looking for"
-              ></textarea>
-
-              <p v-if="leadError" class="chat-error">{{ leadError }}</p>
-              <p v-else class="lead-hint">Name and at least one contact detail are required.</p>
-
-              <div class="lead-form-actions">
-                <button class="ghost-btn" type="button" @click="cancelLeadFlow" :disabled="submittingLead">Cancel</button>
-                <button class="contact-submit" type="submit" :disabled="!leadFormValid || submittingLead">
-                  <span v-if="submittingLead">Sending...</span>
-                  <span v-else>Send</span>
-                </button>
+        <div ref="scrollContainer" class="chat-scroll-region">
+          <div class="chat-body" role="log" aria-live="polite">
+            <div v-for="message in messages" :key="message.id" :class="['chat-message', message.role]">
+              <div class="message-bubble">
+                <p v-for="(paragraph, index) in normalizeContent(message.content)" :key="`${message.id}-${index}`">{{ paragraph }}</p>
               </div>
-            </form>
+            </div>
+            <div v-if="loading" class="chat-message assistant">
+              <div class="message-bubble loading">
+                <span class="dot"></span>
+                <span class="dot"></span>
+                <span class="dot"></span>
+              </div>
+            </div>
           </div>
-        </transition>
 
-        <div v-if="contextEntries.length" class="chat-context">
-          <h3>Referenced properties</h3>
-          <ul>
-            <li v-for="property in contextEntries" :key="property.extId ?? property.propertyId">
-              <button type="button" class="context-link" @click="openProperty(property)">
-                <strong>{{ property.name ?? 'Property' }}</strong>
-                <span v-if="property.area || property.city" class="context-location">
-                  {{ [property.area, property.city].filter(Boolean).join(', ') }}
-                </span>
+          <div v-if="showSuggestions" class="chat-suggestions">
+            <p class="suggestions-label">Try asking:</p>
+            <div class="suggestions-list">
+              <button
+                v-for="prompt in suggestionPrompts"
+                :key="prompt"
+                class="suggestion-chip"
+                type="button"
+                @click="useSuggestion(prompt)"
+              >
+                {{ prompt }}
               </button>
-              <small v-if="property.priceRange" class="context-info">Pricing: {{ property.priceRange }}</small>
-              <small v-if="property.unitsRange" class="context-info">Units: {{ property.unitsRange }}</small>
-              <ul v-if="property.keyPoints?.length" class="context-points">
-                <li v-for="(bullet, bulletIndex) in property.keyPoints.slice(0, 3)" :key="bulletIndex">{{ bullet }}</li>
-              </ul>
-            </li>
-          </ul>
+            </div>
+          </div>
+
+          <transition name="chat-fade">
+            <div v-if="showLeadForm" class="chat-lead-card">
+              <h3>Share your details</h3>
+              <p class="lead-subtitle">I'll connect you with an agent right away.</p>
+              <form ref="leadFormRef" class="lead-form" @submit.prevent="submitLeadDetails">
+                <label class="lead-label" for="leadName">Name</label>
+                <input
+                  id="leadName"
+                  v-model.trim="leadForm.name"
+                  type="text"
+                  name="lead-name"
+                  autocomplete="name"
+                  required
+                  :disabled="submittingLead"
+                  placeholder="Your full name"
+                />
+
+                <label class="lead-label" for="leadEmail">Email</label>
+                <input
+                  id="leadEmail"
+                  v-model.trim="leadForm.email"
+                  type="email"
+                  name="lead-email"
+                  autocomplete="email"
+                  :disabled="submittingLead"
+                  placeholder="you@example.com"
+                />
+
+                <label class="lead-label" for="leadPhone">Phone</label>
+                <input
+                  id="leadPhone"
+                  v-model.trim="leadForm.phone"
+                  type="tel"
+                  name="lead-phone"
+                  autocomplete="tel"
+                  :disabled="submittingLead"
+                  placeholder="+971 50 123 4567"
+                />
+
+                <label class="lead-label" for="leadMessage">Notes</label>
+                <textarea
+                  id="leadMessage"
+                  v-model.trim="leadForm.message"
+                  name="lead-message"
+                  rows="2"
+                  :disabled="submittingLead"
+                  placeholder="Optional — tell us what you're looking for"
+                ></textarea>
+
+                <p v-if="leadError" class="chat-error">{{ leadError }}</p>
+                <p v-else class="lead-hint">Name and at least one contact detail are required.</p>
+
+                <div class="lead-form-actions">
+                  <button class="ghost-btn" type="button" @click="cancelLeadFlow" :disabled="submittingLead">Cancel</button>
+                  <button class="contact-submit" type="submit" :disabled="!leadFormValid || submittingLead">
+                    <span v-if="submittingLead">Sending...</span>
+                    <span v-else>Send</span>
+                  </button>
+                </div>
+              </form>
+            </div>
+          </transition>
+
+          <div v-if="contextEntries.length" class="chat-context">
+            <h3>Referenced properties</h3>
+            <ul>
+              <li v-for="property in contextEntries" :key="property.extId ?? property.propertyId">
+                <button type="button" class="context-link" @click="openProperty(property)">
+                  <strong>{{ property.name ?? 'Property' }}</strong>
+                  <span v-if="property.area || property.city" class="context-location">
+                    {{ [property.area, property.city].filter(Boolean).join(', ') }}
+                  </span>
+                </button>
+                <small v-if="property.priceRange" class="context-info">Pricing: {{ property.priceRange }}</small>
+                <small v-if="property.unitsRange" class="context-info">Units: {{ property.unitsRange }}</small>
+                <ul v-if="property.keyPoints?.length" class="context-points">
+                  <li v-for="(bullet, bulletIndex) in property.keyPoints.slice(0, 3)" :key="bulletIndex">{{ bullet }}</li>
+                </ul>
+              </li>
+            </ul>
+          </div>
         </div>
 
         <form class="chat-form" @submit.prevent="sendMessage">
@@ -345,6 +360,13 @@ watch(showLeadForm, value => {
   }
 });
 
+watch(
+  () => contextEntries.value.length,
+  () => {
+    scrollToBottom();
+  },
+);
+
 const registerEscapeHandler = (event: KeyboardEvent) => {
   if (event.key === 'Escape') {
     isOpen.value = false;
@@ -524,20 +546,24 @@ const openProperty = (property: BackendPropertyContext) => {
   gap: 0.5rem;
   padding: 0.75rem 1.25rem;
   border-radius: 999px;
-  border: none;
-  background: var(--primary-color, #3182ce);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background:
+    radial-gradient(circle at 18% 18%, rgba(255, 255, 255, 0.28), transparent 50%),
+    linear-gradient(135deg, var(--primary-color, #2563eb), var(--secondary-color, #0ea5e9));
   color: #fff;
   font-weight: 600;
-  box-shadow: 0 12px 32px rgba(49, 130, 206, 0.35);
+  box-shadow: 0 14px 40px rgba(37, 99, 235, 0.32);
+  backdrop-filter: blur(8px);
   cursor: pointer;
   transition:
     transform 0.2s ease,
-    box-shadow 0.2s ease;
+    box-shadow 0.2s ease,
+    opacity 0.2s ease;
 }
 
 .ai-chat-toggle:hover {
   transform: translateY(-2px);
-  box-shadow: 0 18px 36px rgba(49, 130, 206, 0.45);
+  box-shadow: 0 20px 42px rgba(37, 99, 235, 0.38);
 }
 
 .toggle-icon {
@@ -555,24 +581,31 @@ const openProperty = (property: BackendPropertyContext) => {
 
 .ai-chat-panel {
   margin-top: 1rem;
-  width: min(360px, calc(100vw - 2rem));
-  max-height: calc(100vh - 5rem);
+  width: min(420px, calc(100vw - 2rem));
+  height: min(680px, calc(100dvh - 5rem));
+  max-height: calc(100dvh - 5rem);
   background: #ffffff;
-  border-radius: 1rem;
-  box-shadow: 0 16px 48px rgba(15, 23, 42, 0.25);
+  border-radius: 1.25rem;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  box-shadow:
+    0 24px 60px rgba(15, 23, 42, 0.18),
+    0 8px 18px rgba(15, 23, 42, 0.08);
   display: flex;
   flex-direction: column;
   overflow: hidden;
 }
 
 .chat-header {
-  padding: 1rem 1.25rem;
-  background: linear-gradient(135deg, var(--primary-color, #3182ce), var(--secondary-color, #4fd1c5));
+  padding: 0.95rem 1rem;
+  background:
+    radial-gradient(circle at 0% 0%, rgba(255, 255, 255, 0.18), transparent 50%),
+    linear-gradient(135deg, var(--primary-color, #2563eb), var(--secondary-color, #06b6d4));
   color: #ffffff;
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.16);
 }
 
 .bot-branding {
@@ -601,47 +634,67 @@ const openProperty = (property: BackendPropertyContext) => {
   display: flex;
   flex-direction: column;
   gap: 0.1rem;
+  min-width: 0;
 }
 
 .bot-title {
   font-size: 1rem;
   font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.02em;
 }
 
 .chat-subtitle {
   margin: 0;
-  font-size: 0.85rem;
-  opacity: 0.85;
+  font-size: 0.78rem;
+  line-height: 1.35;
+  opacity: 0.92;
 }
 
 .close-btn {
-  border: none;
-  background: transparent;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.12);
   color: inherit;
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   line-height: 1;
   cursor: pointer;
   padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .header-actions {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 0.5rem;
+  flex-wrap: wrap;
+  min-width: 0;
 }
 
-.chat-body {
-  padding: 1rem;
+.chat-scroll-region {
+  flex: 1 1 auto;
+  min-height: 0;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
+  background: linear-gradient(180deg, rgba(241, 245, 249, 0.65), rgba(255, 255, 255, 0.95) 14rem), #ffffff;
+}
+
+.chat-body {
+  padding: 0.95rem 0.95rem 0.5rem;
+  display: flex;
+  flex-direction: column;
   gap: 0.75rem;
+  overflow: visible;
 }
 
 .chat-message {
   display: flex;
+  width: 100%;
 }
 
 .chat-message.user {
@@ -653,18 +706,31 @@ const openProperty = (property: BackendPropertyContext) => {
 }
 
 .message-bubble {
-  max-width: 85%;
-  padding: 0.75rem 1rem;
+  max-width: 88%;
+  padding: 0.75rem 0.95rem;
   border-radius: 1rem;
+  border: 1px solid rgba(148, 163, 184, 0.26);
   font-size: 0.95rem;
   line-height: 1.5;
-  background: #eff6ff;
+  background: rgba(255, 255, 255, 0.92);
   color: #1e293b;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.05);
+  overflow-wrap: anywhere;
+}
+
+.message-bubble p {
+  margin: 0;
+}
+
+.message-bubble p + p {
+  margin-top: 0.45rem;
 }
 
 .chat-message.user .message-bubble {
-  background: var(--primary-color, #3182ce);
+  border-color: transparent;
+  background: linear-gradient(135deg, var(--primary-color, #2563eb), var(--secondary-color, #0ea5e9));
   color: #ffffff;
+  box-shadow: 0 10px 20px rgba(37, 99, 235, 0.2);
 }
 
 .message-bubble.loading {
@@ -704,16 +770,21 @@ const openProperty = (property: BackendPropertyContext) => {
 }
 
 .chat-context {
-  padding: 0.75rem 1rem;
-  border-top: 1px solid rgba(15, 23, 42, 0.08);
-  background: rgba(15, 23, 42, 0.02);
+  margin: 0.25rem 0.95rem 0.85rem;
+  padding: 0.95rem;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 0.95rem;
+  background: rgba(248, 250, 252, 0.92);
+  max-height: min(30vh, 19rem);
+  min-height: 8.5rem;
+  overflow-y: auto;
 }
 
 .chat-context h3 {
-  margin: 0 0 0.5rem;
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: #334155;
+  margin: 0 0 0.75rem;
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: #0f172a;
 }
 
 .chat-context ul {
@@ -725,6 +796,13 @@ const openProperty = (property: BackendPropertyContext) => {
   gap: 0.75rem;
 }
 
+.chat-context ul > li {
+  padding: 0.75rem;
+  border-radius: 0.85rem;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  background: rgba(255, 255, 255, 0.95);
+}
+
 .context-link {
   display: flex;
   flex-direction: column;
@@ -732,35 +810,50 @@ const openProperty = (property: BackendPropertyContext) => {
   background: transparent;
   text-align: left;
   padding: 0;
-  font-size: 0.95rem;
+  font-size: 1rem;
   color: var(--primary-color, #3182ce);
   cursor: pointer;
+  line-height: 1.3;
+}
+
+.context-link strong {
+  color: #1d4ed8;
+  font-size: 0.98rem;
 }
 
 .context-location {
-  font-size: 0.8rem;
+  margin-top: 0.2rem;
+  font-size: 0.86rem;
   color: #64748b;
 }
 
 .context-info {
   display: block;
-  font-size: 0.75rem;
-  color: #475569;
-  margin-top: 0.25rem;
+  font-size: 0.84rem;
+  color: #334155;
+  margin-top: 0.35rem;
+  line-height: 1.35;
 }
 
 .context-points {
-  margin: 0.35rem 0 0;
-  padding-left: 1rem;
+  margin: 0.45rem 0 0;
+  padding-left: 1.05rem;
   color: #475569;
-  font-size: 0.8rem;
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
+.context-points li + li {
+  margin-top: 0.2rem;
 }
 
 .chat-form {
-  padding: 0.75rem 1rem 1rem;
+  padding: 0.85rem 1rem 1rem;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  border-top: 1px solid rgba(148, 163, 184, 0.2);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), #ffffff), #ffffff;
 }
 
 .chat-input {
@@ -769,8 +862,12 @@ const openProperty = (property: BackendPropertyContext) => {
   border-radius: 0.75rem;
   padding: 0.75rem 1rem;
   font-size: 0.95rem;
-  resize: none;
+  line-height: 1.45;
+  min-height: 2.9rem;
+  max-height: 9rem;
+  resize: vertical;
   outline: none;
+  background: #ffffff;
   transition:
     border-color 0.2s ease,
     box-shadow 0.2s ease;
@@ -787,6 +884,7 @@ const openProperty = (property: BackendPropertyContext) => {
   border-radius: 999px;
   font-weight: 600;
   padding: 0.5rem 1.2rem;
+  white-space: nowrap;
   cursor: pointer;
   border: none;
   transition:
@@ -814,6 +912,7 @@ const openProperty = (property: BackendPropertyContext) => {
 .contact-btn {
   background: #ffffff;
   color: var(--primary-color, #3182ce);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
 }
 
 .contact-btn:hover {
@@ -821,7 +920,7 @@ const openProperty = (property: BackendPropertyContext) => {
 }
 
 .chat-suggestions {
-  padding: 0 1rem 1rem;
+  padding: 0.1rem 0.95rem 0.75rem;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -862,14 +961,15 @@ const openProperty = (property: BackendPropertyContext) => {
 }
 
 .chat-lead-card {
-  margin: 0 1rem 1rem;
+  margin: 0 0.95rem 0.85rem;
   padding: 1rem;
   border: 1px solid rgba(148, 163, 184, 0.3);
   border-radius: 1rem;
-  background: rgba(248, 250, 252, 0.85);
+  background: rgba(248, 250, 252, 0.95);
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
 .chat-lead-card h3 {
@@ -948,11 +1048,14 @@ const openProperty = (property: BackendPropertyContext) => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
 }
 
 .chat-error {
   color: #dc2626;
   font-size: 0.8rem;
+  flex: 1 1 12rem;
 }
 
 .send-btn {
@@ -960,9 +1063,10 @@ const openProperty = (property: BackendPropertyContext) => {
   border-radius: 999px;
   padding: 0.55rem 1.4rem;
   font-weight: 600;
-  background: var(--primary-color, #3182ce);
+  background: linear-gradient(135deg, var(--primary-color, #2563eb), var(--secondary-color, #0ea5e9));
   color: #fff;
   cursor: pointer;
+  box-shadow: 0 10px 18px rgba(37, 99, 235, 0.2);
   transition:
     background 0.2s ease,
     transform 0.2s ease;
@@ -975,7 +1079,35 @@ const openProperty = (property: BackendPropertyContext) => {
 
 .send-btn:not(:disabled):hover {
   transform: translateY(-1px);
-  background: var(--primary-color-dark, #2c5aa0);
+  background: linear-gradient(135deg, var(--primary-color-dark, #1d4ed8), var(--secondary-color, #0284c7));
+}
+
+.ai-chat-toggle:focus-visible,
+.ghost-btn:focus-visible,
+.contact-btn:focus-visible,
+.contact-submit:focus-visible,
+.send-btn:focus-visible,
+.close-btn:focus-visible,
+.suggestion-chip:focus-visible,
+.context-link:focus-visible {
+  outline: 2px solid rgba(37, 99, 235, 0.35);
+  outline-offset: 2px;
+}
+
+.chat-scroll-region::-webkit-scrollbar,
+.chat-context::-webkit-scrollbar {
+  width: 8px;
+}
+
+.chat-scroll-region::-webkit-scrollbar-thumb,
+.chat-context::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.5);
+  border-radius: 999px;
+}
+
+.chat-scroll-region::-webkit-scrollbar-track,
+.chat-context::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 .chat-fade-enter-active,
@@ -993,26 +1125,74 @@ const openProperty = (property: BackendPropertyContext) => {
 
 @media (max-width: 640px) {
   .ai-chat-widget {
-    right: 1rem;
+    right: 0.75rem;
     bottom: 1rem;
   }
 
   .ai-chat-panel {
-    width: min(320px, calc(100vw - 1.5rem));
+    width: min(390px, calc(100vw - 1rem));
+    height: min(76dvh, calc(100dvh - 4.75rem));
+    max-height: calc(100dvh - 4.75rem);
   }
 
   .bot-branding {
     align-items: flex-start;
+    flex: 1 1 100%;
   }
 
   .header-actions {
     gap: 0.35rem;
+    width: 100%;
+    justify-content: space-between;
   }
 
   .ghost-btn,
   .contact-btn {
     padding: 0.45rem 0.9rem;
     font-size: 0.8rem;
+  }
+
+  .close-btn {
+    width: 1.85rem;
+    height: 1.85rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .ai-chat-widget {
+    left: 0.5rem;
+    right: 0.5rem;
+    align-items: stretch;
+  }
+
+  .ai-chat-toggle {
+    align-self: flex-end;
+  }
+
+  .ai-chat-panel {
+    width: calc(100vw - 1rem);
+  }
+
+  .toggle-label {
+    display: none;
+  }
+
+  .chat-header {
+    padding: 0.85rem;
+  }
+
+  .chat-subtitle {
+    font-size: 0.74rem;
+  }
+
+  .chat-context {
+    max-height: min(28vh, 16rem);
+    min-height: 7.5rem;
+    padding: 0.85rem;
+  }
+
+  .chat-context ul > li {
+    padding: 0.65rem;
   }
 }
 </style>

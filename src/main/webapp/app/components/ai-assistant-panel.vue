@@ -9,7 +9,7 @@
     </header>
 
     <div class="chat-card-body">
-      <div ref="scrollContainer" class="chat-thread">
+      <div ref="scrollContainer" class="chat-thread" role="log" aria-live="polite">
         <div v-for="message in messages" :key="message.id" :class="['chat-item', message.role]">
           <div class="chat-bubble">
             <p v-for="(paragraph, index) in normalizeContent(message.content)" :key="`${message.id}-${index}`">
@@ -238,6 +238,22 @@ const resetConversation = () => {
   display: flex;
   flex-direction: column;
   height: 100%;
+  min-height: 0;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 1rem;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.card-header {
+  border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+  background:
+    radial-gradient(circle at 0% 0%, rgba(37, 99, 235, 0.08), transparent 45%), linear-gradient(180deg, rgba(248, 250, 252, 0.9), #ffffff);
+}
+
+.card-footer {
+  border-top: 1px solid rgba(148, 163, 184, 0.18);
+  background: rgba(255, 255, 255, 0.96);
 }
 
 .chat-card-body {
@@ -245,14 +261,23 @@ const resetConversation = () => {
   grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
   gap: 1.5rem;
   padding: 1.5rem;
+  align-items: start;
+  min-height: min(62vh, 640px);
+  background: linear-gradient(180deg, rgba(241, 245, 249, 0.42), rgba(255, 255, 255, 0.95) 16rem), #ffffff;
 }
 
 .chat-thread {
-  max-height: 360px;
+  max-height: min(52vh, 520px);
+  min-height: 20rem;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  padding: 1rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  background: rgba(255, 255, 255, 0.86);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
 }
 
 .chat-item {
@@ -272,14 +297,25 @@ const resetConversation = () => {
   padding: 0.9rem 1.1rem;
   border-radius: 0.9rem;
   border: 1px solid rgba(148, 163, 184, 0.35);
-  background: #f8fafc;
+  background: rgba(248, 250, 252, 0.95);
   font-size: 0.95rem;
   line-height: 1.6;
+  color: #0f172a;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.04);
+  overflow-wrap: anywhere;
+}
+
+.chat-bubble p {
+  margin: 0;
+}
+
+.chat-bubble p + p {
+  margin-top: 0.45rem;
 }
 
 .chat-item.user .chat-bubble {
-  background: rgba(49, 130, 206, 0.08);
-  border-color: rgba(49, 130, 206, 0.35);
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.12), rgba(14, 165, 233, 0.08));
+  border-color: rgba(37, 99, 235, 0.25);
 }
 
 .chat-loading {
@@ -288,32 +324,113 @@ const resetConversation = () => {
 }
 
 .chat-context {
-  border-left: 1px solid rgba(148, 163, 184, 0.2);
-  padding-left: 1.5rem;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 1rem;
+  padding: 1.1rem;
+  background: rgba(255, 255, 255, 0.9);
   overflow-y: auto;
+  max-height: min(58vh, 620px);
+  min-height: 16rem;
+}
+
+.chat-context .h6 {
+  margin-bottom: 0.85rem;
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+}
+
+.chat-context .context-row {
+  padding: 0.8rem;
+  border-radius: 0.85rem;
+  background: rgba(248, 250, 252, 0.95);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+.chat-context .context-row .btn-link {
+  font-size: 0.98rem;
+  line-height: 1.35;
+}
+
+.chat-context .context-row .small {
+  font-size: 0.84rem;
+  line-height: 1.4;
 }
 
 .context-row + .context-row {
-  margin-top: 0.75rem;
-  padding-top: 0.75rem;
-  border-top: 1px solid rgba(148, 163, 184, 0.15);
+  margin-top: 0.8rem;
+  padding-top: 0.8rem;
+  border-top: none;
 }
 
 .chat-form {
   margin-bottom: 0;
 }
 
+.chat-form .form-control {
+  border-radius: 0.85rem;
+  border-color: rgba(148, 163, 184, 0.4);
+  min-height: 3.2rem;
+  max-height: 10rem;
+  resize: vertical;
+  box-shadow: none;
+}
+
+.chat-form .form-control:focus {
+  border-color: rgba(37, 99, 235, 0.55);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14);
+}
+
+.chat-thread::-webkit-scrollbar,
+.chat-context::-webkit-scrollbar {
+  width: 8px;
+}
+
+.chat-thread::-webkit-scrollbar-thumb,
+.chat-context::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.5);
+  border-radius: 999px;
+}
+
+.chat-thread::-webkit-scrollbar-track,
+.chat-context::-webkit-scrollbar-track {
+  background: transparent;
+}
+
 @media (max-width: 992px) {
   .chat-card-body {
     grid-template-columns: 1fr;
     gap: 1rem;
+    min-height: auto;
   }
 
   .chat-context {
-    border-left: none;
-    border-top: 1px solid rgba(148, 163, 184, 0.2);
-    padding-left: 0;
-    padding-top: 1rem;
+    max-height: 18rem;
+    min-height: 0;
+    padding: 0.9rem;
+  }
+
+  .chat-thread {
+    max-height: min(42vh, 420px);
+    min-height: 16rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .chat-card-body {
+    padding: 1rem;
+  }
+
+  .chat-thread {
+    padding: 0.85rem;
+    min-height: 14rem;
+  }
+
+  .chat-bubble {
+    max-width: 96%;
+  }
+
+  .chat-context .context-row {
+    padding: 0.7rem;
   }
 }
 </style>
