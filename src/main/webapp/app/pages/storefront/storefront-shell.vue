@@ -11,7 +11,6 @@
   <div v-else class="storefront">
     <header class="storefront-hero">
       <div class="hero-container">
-        <!-- Top Bar: Logo and Name on Left, Contact Actions on Right -->
         <div class="hero-top-bar">
           <div class="hero-brand">
             <img v-if="site?.logoUrl" :src="site.logoUrl" alt="Agent logo" class="brand-logo" />
@@ -28,35 +27,88 @@
           </div>
         </div>
 
-        <!-- Metrics Row -->
-        <div class="hero-metrics">
-          <div class="hero-metric">
-            <span class="hero-metric__value">{{ formattedTotalItems }}</span>
-            <span class="hero-metric__label">Active Listings</span>
+        <div class="hero-layout">
+          <div class="hero-copy">
+            <h2>Find the right UAE property with expert guidance.</h2>
+            <p>
+              Browse curated listings, compare communities, and ask the AI assistant to shortlist matching homes, off-plan launches, or
+              investment options.
+            </p>
+            <div class="hero-actions">
+              <button type="button" class="btn btn-hero-primary" @click="focusFilters">Browse listings</button>
+              <button
+                type="button"
+                class="btn btn-hero-secondary"
+                @click="openChatWithPrompt('Help me find the best properties for my budget.')"
+              >
+                Ask AI assistant
+              </button>
+            </div>
           </div>
-          <div v-if="cityCount" class="hero-metric">
-            <span class="hero-metric__value">{{ cityCount }}</span>
-            <span class="hero-metric__label">Featured Cities</span>
-          </div>
-          <div v-if="averagePrice" class="hero-metric">
-            <span class="hero-metric__value">{{ averagePrice }}</span>
-            <span class="hero-metric__label">Avg Starting Price</span>
+
+          <div class="hero-search-card">
+            <div class="hero-search-card__header">
+              <span>Smart property search</span>
+              <small>{{ resultSummary }}</small>
+            </div>
+            <div class="hero-quick-search">
+              <input
+                v-model="searchTerm"
+                type="search"
+                class="hero-search-input"
+                placeholder="Search by community, project, developer..."
+                aria-label="Search properties"
+              />
+              <button type="button" class="btn btn-search-ai" @click="openChatWithPrompt(aiSearchPrompt)">Ask AI</button>
+            </div>
+            <div class="hero-prompt-grid">
+              <button v-for="prompt in heroPrompts" :key="prompt" type="button" @click="openChatWithPrompt(prompt)">
+                {{ prompt }}
+              </button>
+            </div>
+            <div class="hero-metrics">
+              <div class="hero-metric">
+                <span class="hero-metric__value">{{ formattedTotalItems }}</span>
+                <span class="hero-metric__label">Active Listings</span>
+              </div>
+              <div v-if="cityCount" class="hero-metric">
+                <span class="hero-metric__value">{{ cityCount }}</span>
+                <span class="hero-metric__label">Cities</span>
+              </div>
+              <div v-if="averagePrice" class="hero-metric">
+                <span class="hero-metric__value">{{ averagePrice }}</span>
+                <span class="hero-metric__label">Avg Starting Price</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </header>
 
-    <!-- Filters Section - Moved to top, after hero -->
     <section class="filters-section">
-      <div class="filters-container">
+      <div ref="filtersSectionRef" class="filters-container">
         <div class="filters-header">
-          <h2>Find Your Property</h2>
+          <div>
+            <h2>Refine listings</h2>
+            <p>Use precise filters or ask the assistant for a guided shortlist.</p>
+          </div>
           <button type="button" class="btn-toggle-filters" @click="toggleAdvancedFilters">
             {{ showAdvancedFilters ? 'Hide Filters' : 'Show More Filters' }}
           </button>
         </div>
 
         <form class="filter-grid" @submit.prevent>
+          <div class="form-group form-group--wide">
+            <label for="propertySearch">Search</label>
+            <input id="propertySearch" v-model="searchTerm" type="search" class="form-control" placeholder="Project, area, developer..." />
+          </div>
+          <div class="form-group">
+            <label for="city">City</label>
+            <select id="city" v-model="selectedCity" class="form-control">
+              <option value="">All Cities</option>
+              <option v-for="cityOption in propertyStore.cities" :key="cityOption" :value="cityOption">{{ cityOption }}</option>
+            </select>
+          </div>
           <div class="form-group">
             <label for="listingType">Listing Type</label>
             <select id="listingType" v-model="selectedListingType" class="form-control">
@@ -102,6 +154,10 @@
               </datalist>
             </div>
             <div class="form-group">
+              <label for="country">Country</label>
+              <input id="country" v-model="selectedCountry" type="text" class="form-control" placeholder="United Arab Emirates" />
+            </div>
+            <div class="form-group">
               <label for="developer">Developer</label>
               <input id="developer" v-model="selectedDeveloper" type="text" class="form-control" placeholder="Emaar, DAMAC..." />
             </div>
@@ -123,6 +179,7 @@
         <div class="filters-footer">
           <small class="text-muted">{{ resultSummary }}</small>
           <div class="filters-actions">
+            <button type="button" class="btn btn-assistant-inline" @click="openChatWithPrompt(aiSearchPrompt)">Ask AI to refine</button>
             <label for="pageSize">Show:</label>
             <select id="pageSize" v-model.number="pageSizeSelection" class="form-control-sm" :disabled="propertyStore.loading">
               <option v-for="size in pageSizeOptions" :key="size" :value="size">{{ size }}</option>
@@ -266,7 +323,6 @@ import { useRoute } from 'vue-router';
 
 import AiChatWidget from '@/components/ai-chat-widget.vue';
 import { useAgentSiteStore, usePropertyCatalogStore } from '@/store';
-import MapView from '@/pages/storefront/map-view.vue';
 import PropertyCarousel from '@/pages/storefront/property-carousel.vue';
 import { useAlertService } from '@/shared/alert/alert.service';
 import type { IProperty } from '@/shared/model/property.model';
@@ -296,6 +352,7 @@ const dateTo = ref('');
 
 const showAdvancedFilters = ref(false);
 const highlightedPropertyId = ref<number | null>(null);
+const filtersSectionRef = ref<HTMLElement | null>(null);
 
 type DateLike = string | Date | null | undefined;
 const CAROUSEL_LIMIT = 5;
@@ -305,15 +362,20 @@ const pageSizeOptions = [12, 24, 36];
 const skeletonCardCount = 6;
 
 const site = computed(() => agentSiteStore.site);
-const themeTagline = computed(() => (site.value?.theme ? `${site.value.theme} | UAE Property Specialists` : 'UAE Property Specialists'));
+const heroPrompts = [
+  'Show me family-friendly homes.',
+  'Find off-plan properties with payment plans.',
+  'Which listings are best for investment?',
+] as const;
 
-const heroGradient = computed(() => {
-  if (!site.value?.primaryColor || !site.value?.secondaryColor) {
-    return {};
-  }
-  return {
-    background: `linear-gradient(135deg, ${site.value.primaryColor} 0%, ${site.value.secondaryColor} 100%)`,
-  };
+const aiSearchPrompt = computed(() => {
+  const parts = [
+    searchTerm.value ? `matching "${searchTerm.value}"` : '',
+    selectedCity.value ? `in ${selectedCity.value}` : '',
+    selectedListingType.value ? listingTypeLabel(selectedListingType.value).toLowerCase() : '',
+    maxPrice.value ? `under AED ${Number(maxPrice.value).toLocaleString()}` : '',
+  ].filter(Boolean);
+  return parts.length ? `Shortlist properties ${parts.join(' ')}.` : 'Help me shortlist the best properties on this storefront.';
 });
 
 // Helper function to darken colors for hover states
@@ -499,7 +561,6 @@ const completionCarouselItems = ref<IProperty[]>([]);
 
 watchEffect(() => {
   const items = catalogItems.value ?? [];
-  console.log('[CAROUSEL WATCHEFFECT] catalogItems:', items.length);
 
   const recent = dedupeProperties([...items].sort((a, b) => getPublishedTimestamp(b) - getPublishedTimestamp(a))).slice(0, CAROUSEL_LIMIT);
 
@@ -533,40 +594,9 @@ watchEffect(() => {
   recentCarouselItems.value = recent;
   valueCarouselItems.value = bestValue;
   completionCarouselItems.value = completion;
-
-  console.log('[CAROUSEL WATCHEFFECT] Updated carousel data:', {
-    recent: recent.length,
-    value: bestValue.length,
-    completion: completion.length,
-  });
 });
 
 const loadingCarousels = computed(() => propertyStore.loading && catalogItems.value.length === 0);
-
-// Debug watches for carousel data
-watch(
-  () => recentCarouselItems.value,
-  val => {
-    console.log('[WATCH] recentCarouselItems changed:', val.length);
-  },
-  { deep: true },
-);
-
-watch(
-  () => valueCarouselItems.value,
-  val => {
-    console.log('[WATCH] valueCarouselItems changed:', val.length);
-  },
-  { deep: true },
-);
-
-watch(
-  () => completionCarouselItems.value,
-  val => {
-    console.log('[WATCH] completionCarouselItems changed:', val.length);
-  },
-  { deep: true },
-);
 
 const formattedTotalItems = computed(() => propertyStore.totalItems.toLocaleString());
 const displayProperties = computed(() => catalogItems.value);
@@ -586,35 +616,6 @@ const averagePrice = computed(() => {
     return '';
   }
   return `AED ${averagePriceValue.value.toLocaleString()}`;
-});
-
-const lastUpdated = computed(() => {
-  const times: number[] = [];
-
-  for (const property of catalogItems.value) {
-    const date = property.updatedAt ?? property.publishedAt;
-    if (date !== null && date !== undefined) {
-      const timestamp = new Date(date).getTime();
-      if (Number.isFinite(timestamp)) {
-        times.push(timestamp);
-      }
-    }
-  }
-
-  if (!times.length) {
-    return 'Today';
-  }
-
-  const latest = new Date(Math.max(...times));
-  const today = new Date();
-  if (latest.toDateString() === today.toDateString()) {
-    return 'Today';
-  }
-
-  return new Intl.DateTimeFormat(undefined, {
-    month: 'short',
-    day: 'numeric',
-  }).format(latest);
 });
 
 const totalPages = computed(() => {
@@ -679,6 +680,14 @@ const statusOptions = computed(() =>
 
 const toggleAdvancedFilters = () => {
   showAdvancedFilters.value = !showAdvancedFilters.value;
+};
+
+const focusFilters = () => {
+  filtersSectionRef.value?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
+
+const openChatWithPrompt = (prompt?: string) => {
+  window.dispatchEvent(new CustomEvent('storefront-chat-open', { detail: { prompt } }));
 };
 
 const toNumberOrUndefined = (value: string) => {
@@ -838,8 +847,8 @@ onMounted(async () => {
 
 .storefront {
   min-height: 100vh;
-  background: var(--bg-color, #ffffff);
-  color: var(--text-color, #1a202c);
+  background: #f5f7fb;
+  color: #172033;
 }
 
 /* Dark mode support */
@@ -886,24 +895,40 @@ onMounted(async () => {
   font-size: 1rem;
 }
 
-/* Hero Section - Uses Agent Primary Color */
 .storefront-hero {
-  background: var(--primary-color, #3182ce);
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 16% 12%, rgba(255, 255, 255, 0.22), transparent 30rem),
+    linear-gradient(135deg, var(--primary-color, #0f766e) 0%, #123555 54%, var(--secondary-color, #c8a95a) 140%);
   color: white;
   padding: 0;
 }
 
+.storefront-hero::after {
+  content: '';
+  position: absolute;
+  inset: auto -12rem -18rem auto;
+  width: 34rem;
+  height: 34rem;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  pointer-events: none;
+}
+
 .hero-container {
+  position: relative;
+  z-index: 1;
   max-width: 1400px;
   margin: 0 auto;
-  padding: 1.5rem 2rem;
+  padding: 1.25rem 2rem 3rem;
 }
 
 .hero-top-bar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2rem;
+  margin-bottom: 3rem;
   flex-wrap: wrap;
   gap: 1rem;
 }
@@ -915,20 +940,21 @@ onMounted(async () => {
 }
 
 .brand-logo {
-  height: 60px;
-  width: 60px;
+  height: 56px;
+  width: 56px;
   object-fit: contain;
-  border-radius: 0.5rem;
-  background: white;
+  border-radius: 0.85rem;
+  background: rgba(255, 255, 255, 0.96);
   padding: 0.5rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.16);
 }
 
 .brand-name {
-  font-size: 1.75rem;
-  font-weight: 700;
+  font-size: 1.45rem;
+  font-weight: 850;
   margin: 0;
   color: white;
+  line-height: 1.15;
 }
 
 /* Enhanced Contact Actions */
@@ -942,13 +968,14 @@ onMounted(async () => {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.625rem 1.25rem;
-  border-radius: 0.5rem;
-  font-weight: 600;
+  padding: 0.64rem 1rem;
+  border-radius: 0.75rem;
+  font-weight: 750;
   font-size: 0.875rem;
   text-decoration: none;
   transition: all 0.2s ease;
-  border: none;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.12);
 }
 
 .btn-whatsapp {
@@ -963,7 +990,7 @@ onMounted(async () => {
 }
 
 .btn-email {
-  background: white;
+  background: rgba(255, 255, 255, 0.95);
   color: var(--primary-color, #3182ce);
 }
 
@@ -976,7 +1003,6 @@ onMounted(async () => {
 .btn-phone {
   background: rgba(255, 255, 255, 0.15);
   color: white;
-  border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .btn-phone:hover {
@@ -984,38 +1010,186 @@ onMounted(async () => {
   border-color: rgba(255, 255, 255, 0.5);
 }
 
-/* Hero Metrics */
-.hero-metrics {
+.hero-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(360px, 0.75fr);
+  gap: clamp(1.5rem, 5vw, 4.5rem);
+  align-items: center;
+}
+
+.hero-copy {
+  max-width: 680px;
+}
+
+.hero-copy h2 {
+  margin: 0;
+  font-size: clamp(2.35rem, 5vw, 4.9rem);
+  line-height: 0.98;
+  font-weight: 900;
+  letter-spacing: 0;
+}
+
+.hero-copy p {
+  max-width: 620px;
+  margin: 1.35rem 0 0;
+  color: rgba(255, 255, 255, 0.84);
+  font-size: 1.08rem;
+  line-height: 1.75;
+}
+
+.hero-actions {
   display: flex;
-  gap: 2rem;
   flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1.75rem;
+}
+
+.btn-hero-primary,
+.btn-hero-secondary {
+  border-radius: 0.85rem;
+  padding: 0.85rem 1.25rem;
+  font-weight: 800;
+}
+
+.btn-hero-primary {
+  background: #ffffff;
+  color: #17334d;
+  border: none;
+}
+
+.btn-hero-secondary {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+}
+
+.hero-search-card {
+  padding: 1.15rem;
+  border-radius: 1.35rem;
+  background: rgba(255, 255, 255, 0.94);
+  color: #172033;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 28px 80px rgba(5, 20, 36, 0.25);
+  backdrop-filter: blur(14px);
+}
+
+.hero-search-card__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: baseline;
+  margin-bottom: 0.9rem;
+}
+
+.hero-search-card__header span {
+  font-weight: 850;
+  color: #172033;
+}
+
+.hero-search-card__header small {
+  color: #687589;
+  font-weight: 650;
+  text-align: right;
+}
+
+.hero-quick-search {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.6rem;
+}
+
+.hero-search-input {
+  min-width: 0;
+  border-radius: 0.85rem;
+  border: 1px solid #d8e0eb;
+  padding: 0.82rem 0.95rem;
+  font-size: 0.95rem;
+  color: #172033;
+  background: #f8fafc;
+}
+
+.hero-search-input:focus {
+  outline: none;
+  border-color: var(--primary-color, #0f766e);
+  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.12);
+}
+
+.btn-search-ai {
+  border: none;
+  border-radius: 0.85rem;
+  background: linear-gradient(135deg, var(--primary-color, #0f766e), var(--secondary-color, #c8a95a));
+  color: #ffffff;
+  font-weight: 800;
+  padding: 0.78rem 1rem;
+}
+
+.hero-prompt-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.55rem;
+  margin: 0.85rem 0 1rem;
+}
+
+.hero-prompt-grid button {
+  border: 1px solid #dbe3ee;
+  background: #ffffff;
+  color: #334155;
+  border-radius: 0.75rem;
+  padding: 0.7rem;
+  font-size: 0.82rem;
+  line-height: 1.25;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.hero-prompt-grid button:hover {
+  transform: translateY(-1px);
+  border-color: var(--primary-color, #0f766e);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+}
+
+.hero-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.65rem;
 }
 
 .hero-metric {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
+  padding: 0.85rem;
+  border-radius: 0.8rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
 }
 
 .hero-metric__value {
-  font-size: 2rem;
-  font-weight: 700;
-  color: white;
+  font-size: 1.25rem;
+  font-weight: 900;
+  color: #172033;
   line-height: 1;
 }
 
 .hero-metric__label {
-  font-size: 0.875rem;
-  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.72rem;
+  color: #64748b;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
+  font-weight: 800;
 }
 
 /* Filters Section */
 .filters-section {
-  background: var(--bg-secondary, #f7fafc);
-  border-bottom: 1px solid var(--border-color, #e2e8f0);
-  padding: 1.5rem 0;
+  background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 1.35rem 0;
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.04);
 }
 
 .filters-container {
@@ -1027,27 +1201,35 @@ onMounted(async () => {
 .filters-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
+  align-items: flex-start;
+  margin-bottom: 1.15rem;
+  gap: 1rem;
 }
 
 .filters-header h2 {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--text-color, #1a202c);
+  font-size: 1.35rem;
+  font-weight: 900;
+  color: #172033;
   margin: 0;
 }
 
+.filters-header p {
+  margin: 0.18rem 0 0;
+  color: #687589;
+  font-size: 0.94rem;
+}
+
 .btn-toggle-filters {
-  background: none;
-  border: none;
+  background: #eef6f5;
+  border: 1px solid rgba(15, 118, 110, 0.14);
   color: var(--primary-color, #3182ce);
-  font-weight: 600;
+  font-weight: 800;
   cursor: pointer;
   font-size: 0.875rem;
-  padding: 0.5rem 1rem;
-  border-radius: 0.375rem;
+  padding: 0.62rem 1rem;
+  border-radius: 0.75rem;
   transition: all 0.2s ease;
+  white-space: nowrap;
 }
 
 .btn-toggle-filters:hover {
@@ -1062,26 +1244,32 @@ onMounted(async () => {
   margin-bottom: 1rem;
 }
 
+.form-group--wide {
+  grid-column: span 2;
+}
+
 .form-group {
   display: flex;
   flex-direction: column;
 }
 
 .form-group label {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--text-color, #2d3748);
+  font-size: 0.78rem;
+  font-weight: 850;
+  color: #334155;
   margin-bottom: 0.375rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .form-control,
 .form-control-sm {
-  padding: 0.625rem 0.875rem;
-  border: 1px solid var(--border-color, #cbd5e0);
-  border-radius: 0.375rem;
+  padding: 0.72rem 0.875rem;
+  border: 1px solid #d2dbe8;
+  border-radius: 0.75rem;
   font-size: 0.875rem;
-  background: var(--bg-color, white);
-  color: var(--text-color, #1a202c);
+  background: #f8fafc;
+  color: #172033;
   transition: all 0.2s ease;
 }
 
@@ -1100,13 +1288,14 @@ onMounted(async () => {
   gap: 1rem;
   margin-top: 1rem;
   padding-top: 1rem;
-  border-top: 1px solid var(--border-color, #e2e8f0);
+  border-top: 1px solid #edf1f7;
 }
 
 .filters-actions {
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  flex-wrap: wrap;
 }
 
 .filters-actions label {
@@ -1119,13 +1308,22 @@ onMounted(async () => {
 .btn-clear {
   padding: 0.5rem 1rem;
   background: transparent;
-  border: 1px solid var(--border-color, #cbd5e0);
-  border-radius: 0.375rem;
+  border: 1px solid #d2dbe8;
+  border-radius: 0.7rem;
   font-size: 0.875rem;
-  font-weight: 600;
+  font-weight: 750;
   color: var(--text-color, #4a5568);
   cursor: pointer;
   transition: all 0.2s ease;
+}
+
+.btn-assistant-inline {
+  border: none;
+  border-radius: 0.7rem;
+  padding: 0.54rem 0.95rem;
+  background: linear-gradient(135deg, var(--primary-color, #0f766e), var(--secondary-color, #c8a95a));
+  color: #ffffff;
+  font-weight: 800;
 }
 
 .btn-clear:hover:not(:disabled) {
@@ -1141,8 +1339,8 @@ onMounted(async () => {
 
 /* Main Content */
 .storefront-main {
-  background: var(--bg-color, #ffffff);
-  padding: 2rem 0;
+  background: #f5f7fb;
+  padding: 2.25rem 0 4rem;
 }
 
 .main-container {
@@ -1157,12 +1355,12 @@ onMounted(async () => {
 }
 
 .carousel-card {
-  background: var(--bg-secondary, #f7fafc);
-  border: 1px solid var(--border-color, #e2e8f0);
-  border-radius: 0.75rem;
-  padding: 2rem;
-  margin-bottom: 2rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 1rem;
+  padding: 1.4rem;
+  margin-bottom: 1.35rem;
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.06);
 }
 
 /* Property Cards Grid */
@@ -1172,17 +1370,17 @@ onMounted(async () => {
 
 .property-cards-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.25rem;
 }
 
 .property-card {
-  background: var(--bg-color, white);
-  border: 1px solid var(--border-color, #e2e8f0);
-  border-radius: 0.75rem;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 1rem;
   overflow: hidden;
   transition: all 0.2s ease;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
 }
 
 .property-card:hover {
@@ -1197,21 +1395,29 @@ onMounted(async () => {
 }
 
 .property-card__media {
-  height: 220px;
+  height: 210px;
   background-size: cover;
   background-position: center;
-  background-color: var(--bg-secondary, #f7fafc);
+  background-color: #eef2f7;
   position: relative;
+}
+
+.property-card__media::after {
+  content: '';
+  position: absolute;
+  inset: 45% 0 0;
+  background: linear-gradient(180deg, transparent, rgba(15, 23, 42, 0.28));
 }
 
 .property-card__badge {
   position: absolute;
   top: 1rem;
   left: 1rem;
-  background: white;
+  z-index: 1;
+  background: rgba(255, 255, 255, 0.94);
   color: var(--primary-color, #3182ce);
   padding: 0.375rem 0.75rem;
-  border-radius: 0.375rem;
+  border-radius: 0.65rem;
   font-size: 0.75rem;
   font-weight: 600;
   text-transform: uppercase;
@@ -1225,9 +1431,10 @@ onMounted(async () => {
 
 .property-card__title {
   font-size: 1.125rem;
-  font-weight: 700;
+  font-weight: 850;
   color: var(--text-color, #1a202c);
   margin: 0 0 0.5rem 0;
+  line-height: 1.28;
 }
 
 .property-card__location {
@@ -1253,7 +1460,8 @@ onMounted(async () => {
   justify-content: space-between;
   align-items: flex-end;
   padding-top: 1rem;
-  border-top: 1px solid var(--border-color, #e2e8f0);
+  border-top: 1px solid #edf1f7;
+  gap: 1rem;
 }
 
 .property-card__price {
@@ -1440,9 +1648,28 @@ onMounted(async () => {
     padding: 1rem;
   }
 
+  .hero-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-copy h2 {
+    font-size: 2.35rem;
+  }
+
+  .hero-search-card {
+    border-radius: 1rem;
+  }
+
+  .hero-quick-search,
+  .hero-prompt-grid,
+  .hero-metrics {
+    grid-template-columns: 1fr;
+  }
+
   .hero-top-bar {
     flex-direction: column;
     align-items: flex-start;
+    margin-bottom: 2rem;
   }
 
   .contact-actions {
@@ -1455,7 +1682,6 @@ onMounted(async () => {
   }
 
   .hero-metrics {
-    flex-direction: column;
     gap: 1rem;
   }
 
@@ -1472,6 +1698,10 @@ onMounted(async () => {
     grid-template-columns: 1fr;
   }
 
+  .form-group--wide {
+    grid-column: auto;
+  }
+
   .filters-footer {
     flex-direction: column;
     align-items: stretch;
@@ -1479,6 +1709,12 @@ onMounted(async () => {
 
   .filters-actions {
     flex-wrap: wrap;
+    align-items: stretch;
+  }
+
+  .filters-actions .btn,
+  .filters-actions select {
+    flex: 1 1 auto;
   }
 }
 

@@ -247,7 +247,7 @@
           </div>
         </div>
 
-        <div class="d-flex justify-content-between align-items-center">
+        <div class="onboarding-actions d-flex justify-content-between align-items-center">
           <button class="btn btn-link" :disabled="currentStep === 1 || loading" @click="previousStep">Back</button>
           <div>
             <button v-if="currentStep < steps.length" class="btn btn-primary btn-lg" :disabled="!canProceed || loading" @click="nextStep">
@@ -576,11 +576,11 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-/* Modern Onboarding with Progress Flow */
 .agent-onboarding {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
-  background-attachment: fixed;
+  background:
+    linear-gradient(115deg, rgba(10, 31, 50, 0.96), rgba(15, 118, 110, 0.82)),
+    url('/content/images/uae-skyline.svg') no-repeat right bottom / min(54rem, 80vw);
   position: relative;
   padding: 3rem 0;
 }
@@ -593,45 +593,34 @@ onMounted(async () => {
   right: 0;
   bottom: 0;
   background:
-    radial-gradient(circle at 25% 25%, rgba(252, 70, 107, 0.2), transparent 50%),
-    radial-gradient(circle at 75% 75%, rgba(63, 94, 251, 0.2), transparent 50%),
-    radial-gradient(circle at 50% 50%, rgba(240, 147, 251, 0.15), transparent 50%);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 38%),
+    radial-gradient(circle at 12% 18%, rgba(200, 169, 90, 0.2), transparent 28%);
   pointer-events: none;
-  animation: onboardingPulse 10s ease infinite alternate;
-}
-
-@keyframes onboardingPulse {
-  0% {
-    opacity: 0.8;
-  }
-  100% {
-    opacity: 1;
-  }
 }
 
 /* Typography */
 .agent-onboarding h1 {
   color: white;
-  font-weight: 900;
-  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-  letter-spacing: -1px;
+  font-weight: 850;
+  letter-spacing: 0;
+  line-height: 1.05;
 }
 
 .agent-onboarding .lead {
   color: rgba(255, 255, 255, 0.95);
   font-weight: 500;
   font-size: 1.15rem;
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
 }
 
-/* Modern Card */
+.agent-onboarding .text-center .lead.text-muted {
+  color: rgba(255, 255, 255, 0.78) !important;
+}
+
 .card {
-  background: rgba(255, 255, 255, 0.98);
-  backdrop-filter: blur(30px);
-  -webkit-backdrop-filter: blur(30px);
-  border: 2px solid rgba(255, 255, 255, 0.4);
-  border-radius: 2rem;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  background: #fffdf8;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 0.95rem;
+  box-shadow: 0 24px 70px rgba(7, 20, 34, 0.24);
   overflow: hidden;
   position: relative;
 }
@@ -642,12 +631,12 @@ onMounted(async () => {
   top: 0;
   left: 0;
   right: 0;
-  height: 5px;
-  background: linear-gradient(90deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+  height: 4px;
+  background: linear-gradient(90deg, #0f766e 0%, #c8a95a 100%);
 }
 
 .card-body {
-  padding: 3rem 2.5rem;
+  padding: clamp(1.5rem, 4vw, 3rem);
 }
 
 /* Step Indicators */
@@ -655,18 +644,26 @@ onMounted(async () => {
   margin: 0;
   padding: 0;
   margin-bottom: 3rem;
+  padding: 1rem;
+  border-radius: 0.8rem;
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: 0 14px 36px rgba(20, 36, 51, 0.08);
 }
 
 .onboarding-step {
   display: flex;
   align-items: center;
   padding: 1.25rem 1.5rem;
-  border-radius: 1.25rem;
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.08) 0%, rgba(118, 75, 162, 0.08) 100%);
+  border-radius: 0.85rem;
+  background: #f7f4ed;
   flex: 1 1 240px;
   margin: 0.75rem;
-  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  border: 2px solid transparent;
+  transition:
+    transform 0.18s ease,
+    border-color 0.18s ease,
+    background 0.18s ease,
+    box-shadow 0.18s ease;
+  border: 1px solid rgba(20, 36, 51, 0.08);
   position: relative;
   overflow: hidden;
 }
@@ -678,23 +675,22 @@ onMounted(async () => {
   left: 0;
   width: 4px;
   height: 100%;
-  background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+  background: #0f766e;
   transform: scaleY(0);
   transition: transform 0.4s ease;
 }
 
 .onboarding-step:hover {
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.12) 0%, rgba(118, 75, 162, 0.12) 100%);
-  transform: translateY(-4px);
-  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15);
+  background: rgba(15, 118, 110, 0.08);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(20, 36, 51, 0.08);
 }
 
 .onboarding-step.active {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #0f766e;
   color: #fff;
   border-color: rgba(255, 255, 255, 0.3);
-  box-shadow: 0 12px 35px rgba(102, 126, 234, 0.4);
-  transform: scale(1.05);
+  box-shadow: 0 14px 30px rgba(15, 118, 110, 0.25);
 }
 
 .onboarding-step.active::before {
@@ -702,8 +698,8 @@ onMounted(async () => {
 }
 
 .onboarding-step.completed {
-  border: 2px solid rgba(102, 126, 234, 0.4);
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.15) 100%);
+  border-color: rgba(15, 118, 110, 0.28);
+  background: rgba(15, 118, 110, 0.08);
   position: relative;
 }
 
@@ -714,7 +710,7 @@ onMounted(async () => {
   right: 0.75rem;
   width: 24px;
   height: 24px;
-  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+  background: #0f766e;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -722,7 +718,7 @@ onMounted(async () => {
   color: white;
   font-weight: 900;
   font-size: 0.85rem;
-  box-shadow: 0 4px 12px rgba(17, 153, 142, 0.4);
+  box-shadow: 0 4px 12px rgba(15, 118, 110, 0.22);
 }
 
 .step-index {
@@ -758,16 +754,16 @@ onMounted(async () => {
 
 /* Form Styling */
 form h2 {
-  color: #2d3748;
-  font-weight: 800;
+  color: #142433;
+  font-weight: 850;
   margin-bottom: 2rem;
   padding-bottom: 1rem;
-  border-bottom: 3px solid rgba(102, 126, 234, 0.2);
+  border-bottom: 1px solid rgba(20, 36, 51, 0.1);
 }
 
 .form-group label {
   font-weight: 700;
-  color: #2d3748;
+  color: #142433;
   font-size: 0.875rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -775,21 +771,21 @@ form h2 {
 }
 
 .form-control {
-  border-radius: 0.875rem;
-  border: 2px solid rgba(102, 126, 234, 0.2);
-  padding: 0.875rem 1.25rem;
-  transition: all 0.3s ease;
-  background: rgba(255, 255, 255, 0.95);
+  border-radius: 0.65rem;
+  border: 1px solid rgba(96, 112, 128, 0.3);
+  padding: 0.82rem 1rem;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
+  background: #fff;
   font-weight: 500;
   font-size: 0.95rem;
 }
 
 .form-control:focus {
-  border-color: #667eea;
-  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+  border-color: #0f766e;
+  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.12);
   outline: none;
-  background: white;
-  transform: translateY(-2px);
 }
 
 .form-control::placeholder {
@@ -814,13 +810,17 @@ form h2 {
 
 /* Plan Selector */
 .plan-selector .plan-card {
-  border: 2px solid rgba(102, 126, 234, 0.2);
-  border-radius: 1.5rem;
-  padding: 2rem 1.75rem;
+  border: 1px solid rgba(20, 36, 51, 0.1);
+  border-radius: 0.85rem;
+  padding: 1.5rem;
   cursor: pointer;
   height: 100%;
-  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  background: white;
+  transition:
+    transform 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease;
+  background: #fff;
   position: relative;
   overflow: hidden;
 }
@@ -832,15 +832,15 @@ form h2 {
   left: 0;
   right: 0;
   height: 4px;
-  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(90deg, #0f766e 0%, #c8a95a 100%);
   transform: scaleX(0);
   transition: transform 0.4s ease;
 }
 
 .plan-selector .plan-card:hover {
-  transform: translateY(-8px);
-  border-color: #667eea;
-  box-shadow: 0 15px 45px rgba(102, 126, 234, 0.25);
+  transform: translateY(-3px);
+  border-color: #0f766e;
+  box-shadow: 0 16px 34px rgba(20, 36, 51, 0.1);
 }
 
 .plan-selector .plan-card:hover::before {
@@ -848,10 +848,9 @@ form h2 {
 }
 
 .plan-selector .plan-card.active {
-  border-color: #667eea;
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.08) 0%, rgba(118, 75, 162, 0.08) 100%);
-  box-shadow: 0 12px 40px rgba(102, 126, 234, 0.3);
-  transform: scale(1.05);
+  border-color: #0f766e;
+  background: rgba(15, 118, 110, 0.08);
+  box-shadow: 0 14px 34px rgba(15, 118, 110, 0.18);
 }
 
 .plan-selector .plan-card.active::before {
@@ -859,11 +858,11 @@ form h2 {
 }
 
 .plan-selector .plan-card.active::after {
-  content: '✓ Selected';
+  content: 'Selected';
   position: absolute;
   top: 1rem;
   right: 1rem;
-  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+  background: #0f766e;
   color: white;
   padding: 0.35rem 0.75rem;
   border-radius: 0.75rem;
@@ -871,20 +870,20 @@ form h2 {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  box-shadow: 0 4px 12px rgba(17, 153, 142, 0.3);
+  box-shadow: 0 4px 12px rgba(15, 118, 110, 0.22);
 }
 
 .plan-name {
   font-weight: 800;
   font-size: 1.5rem;
   margin-bottom: 0.75rem;
-  color: #2d3748;
+  color: #142433;
 }
 
 .plan-price {
   font-size: 2rem;
   font-weight: 900;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #0f766e 0%, #c8a95a 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -893,81 +892,55 @@ form h2 {
 
 /* Buttons */
 .btn {
-  border-radius: 0.875rem;
-  padding: 0.875rem 2rem;
-  font-weight: 700;
-  transition: all 0.3s ease;
+  border-radius: 0.65rem;
+  padding: 0.85rem 1.45rem;
+  font-weight: 800;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    opacity 0.18s ease;
   border: none;
   position: relative;
   overflow: hidden;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
   font-size: 0.9rem;
 }
 
-.btn::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 0;
-  height: 0;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.3);
-  transform: translate(-50%, -50%);
-  transition:
-    width 0.6s,
-    height 0.6s;
-}
-
-.btn:hover::before {
-  width: 350px;
-  height: 350px;
-}
-
 .btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #0f766e;
   color: white;
-  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 12px 28px rgba(15, 118, 110, 0.24);
 }
 
 .btn-primary:hover:not(:disabled) {
-  transform: translateY(-3px);
-  box-shadow: 0 12px 35px rgba(102, 126, 234, 0.5);
-}
-
-.btn-secondary {
-  background: linear-gradient(135deg, #a8a8a8 0%, #cccccc 100%);
-  color: white;
-  box-shadow: 0 4px 15px rgba(168, 168, 168, 0.3);
-}
-
-.btn-secondary:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(168, 168, 168, 0.4);
+  box-shadow: 0 16px 32px rgba(15, 118, 110, 0.28);
 }
 
 .btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
-  animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-  0%,
-  100% {
-    opacity: 0.6;
-  }
-  50% {
-    opacity: 0.8;
-  }
 }
 
 /* Navigation Buttons */
-.d-flex.justify-content-between {
+.onboarding-actions {
   margin-top: 2.5rem;
-  padding-top: 2rem;
-  border-top: 2px solid rgba(102, 126, 234, 0.1);
+  padding: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.36);
+  border-radius: 0.8rem;
+  background: rgba(255, 253, 248, 0.92);
+  box-shadow: 0 14px 36px rgba(7, 20, 34, 0.16);
+}
+
+.btn-link {
+  color: #0f766e;
+  background: transparent;
+  box-shadow: none;
+}
+
+.btn-link:hover:not(:disabled) {
+  color: #0a5f58;
+  transform: none;
+  box-shadow: none;
 }
 
 /* Responsive Design */
@@ -1019,12 +992,12 @@ form h2 {
   width: 2.5rem;
   height: 2.5rem;
   border-width: 0.3rem;
-  color: #667eea;
+  color: #0f766e;
 }
 
 /* Selection */
 ::selection {
-  background: rgba(102, 126, 234, 0.3);
+  background: rgba(15, 118, 110, 0.24);
   color: #2d3748;
 }
 

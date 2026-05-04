@@ -676,7 +676,9 @@ public class RealEstateChatService {
         Map<String, Object> payload = point.payload();
         PropertyContextDTO dto = new PropertyContextDTO();
 
+        dto.setPropertyId(getLongFromPayload(payload, "propertyId"));
         dto.setExtId(getLongFromPayload(payload, "extId"));
+        dto.setSlug(getStringFromPayload(payload, "slug"));
         dto.setName(getStringFromPayload(payload, "name"));
         dto.setDeveloper(getStringFromPayload(payload, "developer"));
         dto.setArea(getStringFromPayload(payload, "area"));
@@ -684,6 +686,8 @@ public class RealEstateChatService {
         dto.setCountry(getStringFromPayload(payload, "country"));
         dto.setStatus(getStringFromPayload(payload, "status"));
         dto.setPriceRange(getStringFromPayload(payload, "priceRange"));
+        dto.setMinPriceAed(getDoubleFromPayload(payload, "minPriceAed"));
+        dto.setUnitsRange(getStringFromPayload(payload, "unitsRange"));
         dto.setScore(point.score());
 
         // Extract key points from chunk text if available
@@ -710,6 +714,21 @@ public class RealEstateChatService {
         if (value instanceof String) {
             try {
                 return Long.parseLong((String) value);
+            } catch (NumberFormatException e) {
+                return null;
+            }
+        }
+        return null;
+    }
+
+    private Double getDoubleFromPayload(Map<String, Object> payload, String key) {
+        Object value = payload.get(key);
+        if (value instanceof Number) {
+            return ((Number) value).doubleValue();
+        }
+        if (value instanceof String && StringUtils.hasText((String) value)) {
+            try {
+                return Double.valueOf((String) value);
             } catch (NumberFormatException e) {
                 return null;
             }

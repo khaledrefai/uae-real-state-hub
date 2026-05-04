@@ -27,18 +27,20 @@
 
       <aside v-if="contextEntries.length" class="chat-context">
         <h3 class="h6 text-uppercase text-muted">Referenced properties</h3>
-        <ul class="list-unstyled mb-0">
-          <li v-for="property in contextEntries" :key="property.extId ?? property.propertyId" class="context-row">
-            <button class="btn btn-link p-0 text-left" type="button" @click="openProperty(property)">
-              <strong>{{ property.name ?? 'Property' }}</strong>
+        <ul class="context-carousel list-unstyled mb-0" aria-label="Referenced property results">
+          <li v-for="property in contextEntries" :key="property.extId ?? property.propertyId" class="context-card">
+            <button class="context-link" type="button" @click="openProperty(property)" :disabled="!getPropertyUrl(property)">
+              <span class="context-card-top">
+                <strong>{{ property.name ?? 'Property' }}</strong>
+                <span class="context-open-indicator" aria-hidden="true">&nearr;</span>
+              </span>
+              <span class="context-location">
+                {{ [property.area, property.city].filter(Boolean).join(', ') || 'Location TBD' }}
+              </span>
+              <span v-if="property.developer" class="context-developer">{{ property.developer }}</span>
             </button>
-            <div class="text-muted small">
-              {{ [property.area, property.city].filter(Boolean).join(', ') || 'Location TBD' }}
-            </div>
-            <div v-if="property.priceRange" class="small text-primary mt-1">{{ property.priceRange }}</div>
-            <ul v-if="property.keyPoints?.length" class="small text-muted pl-3 mb-1">
-              <li v-for="(bullet, bulletIndex) in property.keyPoints.slice(0, 2)" :key="bulletIndex">{{ bullet }}</li>
-            </ul>
+            <div v-if="property.priceRange" class="context-info text-primary">{{ property.priceRange }}</div>
+            <p v-if="property.keyPoints?.length" class="context-point">{{ property.keyPoints[0] }}</p>
           </li>
         </ul>
       </aside>
@@ -84,6 +86,7 @@ interface ChatMessage {
 interface BackendPropertyContext {
   propertyId?: number | null;
   extId?: number | null;
+  slug?: string | null;
   name?: string | null;
   developer?: string | null;
   area?: string | null;
@@ -91,6 +94,7 @@ interface BackendPropertyContext {
   country?: string | null;
   status?: string | null;
   priceRange?: string | null;
+  minPriceAed?: number | null;
   unitsRange?: string | null;
   score?: number | null;
   keyPoints?: string[];
@@ -204,17 +208,30 @@ const sendMessage = async () => {
   }
 };
 
+const resolvePropertyId = (property: BackendPropertyContext): number | null =>
+  property.propertyId ?? propertyStore.items.find(item => typeof item.extId === 'number' && item.extId === property.extId)?.id ?? null;
+
+const getPropertyUrl = (property: BackendPropertyContext): string => {
+  const propertyId = resolvePropertyId(property);
+  if (propertyId) {
+    const slug = siteSlug.value;
+    const route = slug
+      ? router.resolve(`/store/${slug}/properties/${propertyId}`)
+      : router.resolve({ name: 'PropertyView', params: { propertyId } });
+
+    return route.href;
+  }
+
+  return '';
+};
+
 const openProperty = (property: BackendPropertyContext) => {
-  const slug = siteSlug.value;
-  if (!slug) {
+  const href = getPropertyUrl(property);
+  if (!href) {
     return;
   }
-  const propertyId =
-    property.propertyId ?? propertyStore.items.find(item => typeof item.extId === 'number' && item.extId === property.extId)?.id ?? null;
 
-  if (propertyId) {
-    router.push(`/store/${slug}/properties/${propertyId}`);
-  }
+  window.open(href, '_blank', 'noopener,noreferrer');
 };
 
 const resetConversation = () => {
@@ -239,21 +256,26 @@ const resetConversation = () => {
   flex-direction: column;
   height: 100%;
   min-height: 0;
-  border: 1px solid rgba(148, 163, 184, 0.2);
-  border-radius: 1rem;
+  border: 1px solid rgba(20, 36, 51, 0.1);
+  border-radius: 0.9rem;
   overflow: hidden;
-  background: #ffffff;
+  background: #fffdf8;
 }
 
 .card-header {
-  border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+  border-bottom: 1px solid rgba(20, 36, 51, 0.08);
   background:
-    radial-gradient(circle at 0% 0%, rgba(37, 99, 235, 0.08), transparent 45%), linear-gradient(180deg, rgba(248, 250, 252, 0.9), #ffffff);
+    linear-gradient(135deg, rgba(15, 118, 110, 0.08), rgba(200, 169, 90, 0.08)), linear-gradient(180deg, rgba(255, 253, 248, 0.9), #fffdf8);
+}
+
+.card-header h2 {
+  font-weight: 850;
+  color: #142433;
 }
 
 .card-footer {
-  border-top: 1px solid rgba(148, 163, 184, 0.18);
-  background: rgba(255, 255, 255, 0.96);
+  border-top: 1px solid rgba(20, 36, 51, 0.08);
+  background: rgba(255, 253, 248, 0.96);
 }
 
 .chat-card-body {
@@ -263,7 +285,7 @@ const resetConversation = () => {
   padding: 1.5rem;
   align-items: start;
   min-height: min(62vh, 640px);
-  background: linear-gradient(180deg, rgba(241, 245, 249, 0.42), rgba(255, 255, 255, 0.95) 16rem), #ffffff;
+  background: linear-gradient(180deg, rgba(247, 244, 237, 0.64), rgba(255, 253, 248, 0.95) 16rem), #fffdf8;
 }
 
 .chat-thread {
@@ -274,8 +296,8 @@ const resetConversation = () => {
   flex-direction: column;
   gap: 1rem;
   padding: 1rem;
-  border-radius: 1rem;
-  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 0.8rem;
+  border: 1px solid rgba(20, 36, 51, 0.08);
   background: rgba(255, 255, 255, 0.86);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
 }
@@ -295,9 +317,9 @@ const resetConversation = () => {
 .chat-bubble {
   max-width: 90%;
   padding: 0.9rem 1.1rem;
-  border-radius: 0.9rem;
-  border: 1px solid rgba(148, 163, 184, 0.35);
-  background: rgba(248, 250, 252, 0.95);
+  border-radius: 0.75rem;
+  border: 1px solid rgba(20, 36, 51, 0.1);
+  background: rgba(255, 253, 248, 0.96);
   font-size: 0.95rem;
   line-height: 1.6;
   color: #0f172a;
@@ -314,8 +336,8 @@ const resetConversation = () => {
 }
 
 .chat-item.user .chat-bubble {
-  background: linear-gradient(135deg, rgba(37, 99, 235, 0.12), rgba(14, 165, 233, 0.08));
-  border-color: rgba(37, 99, 235, 0.25);
+  background: linear-gradient(135deg, rgba(15, 118, 110, 0.12), rgba(200, 169, 90, 0.12));
+  border-color: rgba(15, 118, 110, 0.22);
 }
 
 .chat-loading {
@@ -324,13 +346,11 @@ const resetConversation = () => {
 }
 
 .chat-context {
-  border: 1px solid rgba(148, 163, 184, 0.18);
-  border-radius: 1rem;
+  border: 1px solid rgba(20, 36, 51, 0.08);
+  border-radius: 0.8rem;
   padding: 1.1rem;
-  background: rgba(255, 255, 255, 0.9);
-  overflow-y: auto;
-  max-height: min(58vh, 620px);
-  min-height: 16rem;
+  background: rgba(255, 253, 248, 0.92);
+  overflow: hidden;
 }
 
 .chat-context .h6 {
@@ -339,27 +359,93 @@ const resetConversation = () => {
   letter-spacing: 0.08em;
 }
 
-.chat-context .context-row {
-  padding: 0.8rem;
-  border-radius: 0.85rem;
-  background: rgba(248, 250, 252, 0.95);
-  border: 1px solid rgba(148, 163, 184, 0.18);
+.context-carousel {
+  display: flex;
+  gap: 0.85rem;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  padding-bottom: 0.4rem;
 }
 
-.chat-context .context-row .btn-link {
+.chat-context .context-card {
+  flex: 0 0 min(17rem, 86%);
+  min-height: 11rem;
+  padding: 0.8rem;
+  border-radius: 0.7rem;
+  background: #ffffff;
+  border: 1px solid rgba(20, 36, 51, 0.08);
+  scroll-snap-align: start;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.context-link {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  width: 100%;
+  min-height: 4.9rem;
+  border: none;
+  background: transparent;
+  color: #0f766e;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
   font-size: 0.98rem;
   line-height: 1.35;
 }
 
-.chat-context .context-row .small {
+.context-link:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.context-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.context-card-top strong {
+  overflow-wrap: anywhere;
+}
+
+.context-open-indicator {
+  flex: 0 0 auto;
+  color: #64748b;
+  font-size: 0.85rem;
+}
+
+.context-location,
+.context-developer,
+.context-info,
+.context-point {
   font-size: 0.84rem;
   line-height: 1.4;
 }
 
-.context-row + .context-row {
-  margin-top: 0.8rem;
-  padding-top: 0.8rem;
-  border-top: none;
+.context-location {
+  color: #6b7280;
+}
+
+.context-developer {
+  color: #334155;
+}
+
+.context-info {
+  margin-top: 0.2rem;
+}
+
+.context-point {
+  margin: 0.25rem 0 0;
+  color: #64748b;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .chat-form {
@@ -367,8 +453,8 @@ const resetConversation = () => {
 }
 
 .chat-form .form-control {
-  border-radius: 0.85rem;
-  border-color: rgba(148, 163, 184, 0.4);
+  border-radius: 0.65rem;
+  border-color: rgba(96, 112, 128, 0.3);
   min-height: 3.2rem;
   max-height: 10rem;
   resize: vertical;
@@ -376,23 +462,24 @@ const resetConversation = () => {
 }
 
 .chat-form .form-control:focus {
-  border-color: rgba(37, 99, 235, 0.55);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14);
+  border-color: rgba(15, 118, 110, 0.58);
+  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.13);
 }
 
 .chat-thread::-webkit-scrollbar,
-.chat-context::-webkit-scrollbar {
+.context-carousel::-webkit-scrollbar {
   width: 8px;
+  height: 8px;
 }
 
 .chat-thread::-webkit-scrollbar-thumb,
-.chat-context::-webkit-scrollbar-thumb {
+.context-carousel::-webkit-scrollbar-thumb {
   background: rgba(148, 163, 184, 0.5);
   border-radius: 999px;
 }
 
 .chat-thread::-webkit-scrollbar-track,
-.chat-context::-webkit-scrollbar-track {
+.context-carousel::-webkit-scrollbar-track {
   background: transparent;
 }
 
@@ -404,8 +491,6 @@ const resetConversation = () => {
   }
 
   .chat-context {
-    max-height: 18rem;
-    min-height: 0;
     padding: 0.9rem;
   }
 
@@ -429,7 +514,8 @@ const resetConversation = () => {
     max-width: 96%;
   }
 
-  .chat-context .context-row {
+  .chat-context .context-card {
+    flex-basis: 88%;
     padding: 0.7rem;
   }
 }

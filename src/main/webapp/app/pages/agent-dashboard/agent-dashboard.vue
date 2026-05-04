@@ -1,14 +1,17 @@
 <template>
   <div class="agent-dashboard container py-4">
-    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+    <div class="dashboard-hero d-flex flex-wrap justify-content-between align-items-center mb-4">
       <div>
         <h1 class="display-5 mb-2">Agent dashboard</h1>
         <p class="text-muted mb-0">Manage your storefront, listings, and billing in one workspace.</p>
       </div>
-      <router-link v-if="sitePublicUrl" class="btn btn-outline-primary" :to="sitePublicUrl"> View storefront </router-link>
+      <router-link v-if="sitePublicUrl" class="btn btn-outline-primary" :to="sitePublicUrl">
+        <i class="fa fa-external-link-alt mr-2"></i>
+        View storefront
+      </router-link>
     </div>
 
-    <div class="row mb-4">
+    <div class="row metric-grid mb-4">
       <div class="col-md-4" v-for="metric in overviewMetrics" :key="metric.label">
         <div class="metric-card shadow-sm mb-3">
           <div class="metric-value">{{ metric.value }}</div>
@@ -17,7 +20,7 @@
       </div>
     </div>
 
-    <ul class="nav nav-pills mb-4">
+    <ul class="nav nav-pills dashboard-tabs mb-4">
       <li class="nav-item" v-for="tab in tabs" :key="tab.id">
         <button class="nav-link" :class="{ active: activeTab === tab.id }" @click="activeTab = tab.id" type="button">
           {{ tab.label }}
@@ -831,72 +834,94 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-/* Clean Professional Dashboard - Uses Agent's Branding Colors */
 .agent-dashboard {
   min-height: 100vh;
-  background: #f8f9fa;
-  padding-bottom: 2rem;
+  max-width: 1180px;
+  background: #f7f4ed;
+  color: #142433;
+  padding-bottom: 3rem;
 }
 
-/* Header */
+.dashboard-hero {
+  gap: 1rem;
+  padding: 1.5rem;
+  border-radius: 0.9rem;
+  background:
+    linear-gradient(135deg, rgba(255, 253, 248, 0.96), rgba(255, 253, 248, 0.82)),
+    linear-gradient(135deg, rgba(15, 118, 110, 0.15), rgba(200, 169, 90, 0.13));
+  border: 1px solid rgba(20, 36, 51, 0.08);
+  box-shadow: 0 18px 48px rgba(20, 36, 51, 0.07);
+}
+
 .agent-dashboard h1 {
-  color: #1a202c;
-  font-weight: 700;
+  color: #142433;
+  font-weight: 850;
+  letter-spacing: 0;
+  line-height: 1;
 }
 
-.agent-dashboard > .container > .d-flex > div > p {
-  color: #718096;
+.dashboard-hero p {
+  color: #607080 !important;
   font-size: 1rem;
 }
 
-/* Metric Cards */
 .metric-card {
-  background: white;
-  border-radius: 0.75rem;
-  padding: 1.5rem;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  transition: all 0.2s ease;
+  background: #fffdf8;
+  border-radius: 0.85rem;
+  padding: 1.35rem;
+  border: 1px solid rgba(20, 36, 51, 0.08);
+  box-shadow: 0 14px 34px rgba(20, 36, 51, 0.06) !important;
+  transition:
+    transform 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
 }
 
 .metric-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 18px 42px rgba(20, 36, 51, 0.09) !important;
   border-color: var(--primary-color, #3182ce);
 }
 
 .metric-value {
-  font-size: 2rem;
-  font-weight: 700;
+  font-size: clamp(1.75rem, 3vw, 2.35rem);
+  font-weight: 850;
   color: var(--primary-color, #3182ce);
-  line-height: 1.2;
+  line-height: 1;
   margin-bottom: 0.25rem;
 }
 
 .metric-label {
   text-transform: uppercase;
   font-size: 0.75rem;
-  letter-spacing: 0.05em;
-  color: #718096;
-  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: #607080;
+  font-weight: 800;
 }
 
-/* Navigation Pills */
-.nav-pills {
-  background: white;
-  padding: 0.5rem;
-  border-radius: 0.75rem;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+.dashboard-tabs {
+  display: flex;
+  gap: 0.35rem;
+  background: #fffdf8;
+  padding: 0.45rem;
+  border-radius: 0.8rem;
+  border: 1px solid rgba(20, 36, 51, 0.08);
+  box-shadow: 0 12px 30px rgba(20, 36, 51, 0.06);
+  overflow-x: auto;
+  flex-wrap: nowrap;
 }
 
 .nav-pills .nav-link {
-  color: #4a5568;
-  border-radius: 0.5rem;
-  padding: 0.625rem 1.25rem;
-  font-weight: 600;
-  transition: all 0.2s ease;
+  color: #455868;
+  border-radius: 0.55rem;
+  padding: 0.65rem 1rem;
+  font-weight: 800;
+  transition:
+    background 0.18s ease,
+    color 0.18s ease,
+    box-shadow 0.18s ease;
   font-size: 0.875rem;
+  white-space: nowrap;
 }
 
 .nav-pills .nav-link:hover {
@@ -907,27 +932,26 @@ onMounted(async () => {
 .nav-pills .nav-link.active {
   background: var(--primary-color, #3182ce);
   color: white;
-  box-shadow: 0 2px 8px rgba(49, 130, 206, 0.3);
+  box-shadow: 0 10px 22px rgba(49, 130, 206, 0.24);
 }
 
-/* Cards */
 .card {
-  background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 0.75rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  transition: all 0.2s ease;
+  background: #fffdf8;
+  border: 1px solid rgba(20, 36, 51, 0.08);
+  border-radius: 0.85rem;
+  box-shadow: 0 14px 34px rgba(20, 36, 51, 0.06) !important;
+  overflow: hidden;
 }
 
 .card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 18px 42px rgba(20, 36, 51, 0.08) !important;
 }
 
 .card-header {
-  background: #f7fafc;
-  border-bottom: 1px solid #e2e8f0;
+  background: rgba(247, 244, 237, 0.7);
+  border-bottom: 1px solid rgba(20, 36, 51, 0.08);
   padding: 1rem 1.25rem;
-  font-weight: 600;
+  font-weight: 800;
 }
 
 .card-body {
@@ -936,10 +960,11 @@ onMounted(async () => {
 
 /* Forms */
 .form-control {
-  border-radius: 0.5rem;
-  border: 1px solid #cbd5e0;
-  padding: 0.625rem 0.875rem;
+  border-radius: 0.6rem;
+  border: 1px solid rgba(96, 112, 128, 0.28);
+  padding: 0.68rem 0.875rem;
   transition: all 0.2s ease;
+  background: #fff;
 }
 
 .form-control:focus {
@@ -950,9 +975,9 @@ onMounted(async () => {
 
 /* Buttons */
 .btn {
-  border-radius: 0.5rem;
+  border-radius: 0.6rem;
   padding: 0.625rem 1.25rem;
-  font-weight: 600;
+  font-weight: 800;
   transition: all 0.2s ease;
   font-size: 0.875rem;
 }
@@ -998,14 +1023,14 @@ onMounted(async () => {
 }
 
 .table thead th {
-  border-bottom: 2px solid #e2e8f0;
-  color: #4a5568;
-  font-weight: 600;
+  border-bottom: 1px solid rgba(20, 36, 51, 0.08);
+  color: #455868;
+  font-weight: 800;
   text-transform: uppercase;
   font-size: 0.75rem;
   letter-spacing: 0.05em;
   padding: 0.75rem;
-  background: #f7fafc;
+  background: rgba(247, 244, 237, 0.72);
 }
 
 .table tbody tr {
@@ -1013,13 +1038,13 @@ onMounted(async () => {
 }
 
 .table tbody tr:hover {
-  background: #f7fafc;
+  background: rgba(15, 118, 110, 0.04);
 }
 
 .table td {
   vertical-align: middle;
   padding: 0.875rem 0.75rem;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid rgba(20, 36, 51, 0.07);
 }
 
 /* Badges */
@@ -1062,9 +1087,9 @@ onMounted(async () => {
 
 /* Plan Cards */
 .plan-card {
-  background: white;
-  border: 2px solid #e2e8f0;
-  border-radius: 0.75rem;
+  background: #fffdf8;
+  border: 1px solid rgba(20, 36, 51, 0.1);
+  border-radius: 0.85rem;
   padding: 1.5rem;
   height: 100%;
   transition: all 0.2s ease;
@@ -1086,7 +1111,7 @@ onMounted(async () => {
   font-size: 1.25rem;
   font-weight: 700;
   margin-bottom: 0.5rem;
-  color: #1a202c;
+  color: #142433;
 }
 
 .plan-price {
@@ -1097,7 +1122,7 @@ onMounted(async () => {
 }
 
 .plan-description {
-  color: #718096;
+  color: #607080;
   font-size: 0.875rem;
   margin-bottom: 1rem;
   line-height: 1.5;
@@ -1192,16 +1217,25 @@ onMounted(async () => {
 
 /* Responsive */
 @media (max-width: 768px) {
+  .dashboard-hero {
+    padding: 1.1rem;
+  }
+
+  .dashboard-hero .btn {
+    width: 100%;
+  }
+
   .metric-card {
     margin-bottom: 1rem;
   }
 
-  .nav-pills {
-    flex-direction: column;
+  .dashboard-tabs {
+    margin-left: -0.25rem;
+    margin-right: -0.25rem;
   }
 
   .nav-pills .nav-link {
-    margin-bottom: 0.5rem;
+    margin-bottom: 0;
   }
 
   .plan-card {

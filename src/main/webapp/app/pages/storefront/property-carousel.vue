@@ -380,15 +380,7 @@ const canScrollRight = ref(false);
 // Create a computed property for properties
 const propertyList = computed(() => {
   const resolved = unref(props.properties);
-  const result = (resolved ?? []) as IProperty[];
-  console.log(`[CAROUSEL ${props.title}] propertyList computed:`, result.length, 'items', result);
-  console.log(`[CAROUSEL ${props.title}] loading:`, props.loading);
-  console.log(`[CAROUSEL ${props.title}] condition check:`, {
-    loading: props.loading,
-    hasItems: result.length > 0,
-    shouldShowContent: !props.loading && result.length > 0,
-  });
-  return result;
+  return (resolved ?? []) as IProperty[];
 });
 
 // Create a plain ref array as workaround for v-for issue
@@ -399,7 +391,6 @@ watch(
   () => props.properties,
   newVal => {
     itemsToRender.value = (newVal ?? []) as IProperty[];
-    console.log(`[CAROUSEL ${props.title}] itemsToRender updated:`, itemsToRender.value.length);
   },
   { immediate: true, deep: true },
 );

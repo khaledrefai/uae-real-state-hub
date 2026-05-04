@@ -146,19 +146,21 @@
 
           <div v-if="contextEntries.length" class="chat-context">
             <h3>Referenced properties</h3>
-            <ul>
-              <li v-for="property in contextEntries" :key="property.extId ?? property.propertyId">
-                <button type="button" class="context-link" @click="openProperty(property)">
-                  <strong>{{ property.name ?? 'Property' }}</strong>
-                  <span v-if="property.area || property.city" class="context-location">
-                    {{ [property.area, property.city].filter(Boolean).join(', ') }}
+            <ul class="context-carousel" aria-label="Referenced property results">
+              <li v-for="property in contextEntries" :key="property.extId ?? property.propertyId" class="context-card">
+                <button type="button" class="context-link" @click="openProperty(property)" :disabled="!getPropertyUrl(property)">
+                  <span class="context-card-top">
+                    <strong>{{ property.name ?? 'Property' }}</strong>
+                    <span class="context-open-indicator" aria-hidden="true">&nearr;</span>
                   </span>
+                  <span class="context-location">
+                    {{ [property.area, property.city].filter(Boolean).join(', ') || 'Location TBD' }}
+                  </span>
+                  <span v-if="property.developer" class="context-developer">{{ property.developer }}</span>
                 </button>
                 <small v-if="property.priceRange" class="context-info">Pricing: {{ property.priceRange }}</small>
                 <small v-if="property.unitsRange" class="context-info">Units: {{ property.unitsRange }}</small>
-                <ul v-if="property.keyPoints?.length" class="context-points">
-                  <li v-for="(bullet, bulletIndex) in property.keyPoints.slice(0, 3)" :key="bulletIndex">{{ bullet }}</li>
-                </ul>
+                <p v-if="property.keyPoints?.length" class="context-point">{{ property.keyPoints[0] }}</p>
               </li>
             </ul>
           </div>
@@ -201,6 +203,7 @@ interface ChatMessage {
 interface BackendPropertyContext {
   propertyId?: number | null;
   extId?: number | null;
+  slug?: string | null;
   name?: string | null;
   developer?: string | null;
   area?: string | null;
@@ -208,6 +211,7 @@ interface BackendPropertyContext {
   country?: string | null;
   status?: string | null;
   priceRange?: string | null;
+  minPriceAed?: number | null;
   unitsRange?: string | null;
   score?: number | null;
   keyPoints?: string[];
@@ -326,6 +330,14 @@ const togglePanel = () => {
   isOpen.value = !isOpen.value;
 };
 
+const openPanel = (prompt?: string) => {
+  isOpen.value = true;
+  if (prompt?.trim()) {
+    draft.value = prompt.trim();
+  }
+  focusInput();
+};
+
 const focusInput = () => {
   nextTick(() => {
     if (inputRef.value) {
@@ -373,12 +385,19 @@ const registerEscapeHandler = (event: KeyboardEvent) => {
   }
 };
 
+const registerStorefrontOpenHandler = (event: Event) => {
+  const prompt = (event as CustomEvent<{ prompt?: string }>).detail?.prompt;
+  openPanel(prompt);
+};
+
 onMounted(() => {
   document.addEventListener('keydown', registerEscapeHandler);
+  window.addEventListener('storefront-chat-open', registerStorefrontOpenHandler);
 });
 
 onBeforeUnmount(() => {
   document.removeEventListener('keydown', registerEscapeHandler);
+  window.removeEventListener('storefront-chat-open', registerStorefrontOpenHandler);
 });
 
 const scrollToBottom = () => {
@@ -513,19 +532,30 @@ const sendMessage = async () => {
   }
 };
 
+const resolvePropertyId = (property: BackendPropertyContext): number | null =>
+  property.propertyId ?? propertyStore.items.find(item => typeof item.extId === 'number' && item.extId === property.extId)?.id ?? null;
+
+const getPropertyUrl = (property: BackendPropertyContext): string => {
+  const propertyId = resolvePropertyId(property);
+  if (propertyId) {
+    const slug = siteSlug.value;
+    const route = slug
+      ? router.resolve(`/store/${slug}/properties/${propertyId}`)
+      : router.resolve({ name: 'PropertyView', params: { propertyId } });
+
+    return route.href;
+  }
+
+  return '';
+};
+
 const openProperty = (property: BackendPropertyContext) => {
-  const slug = siteSlug.value;
-  if (!slug) {
+  const href = getPropertyUrl(property);
+  if (!href) {
     return;
   }
 
-  const propertyId =
-    property.propertyId ?? propertyStore.items.find(item => typeof item.extId === 'number' && item.extId === property.extId)?.id ?? null;
-
-  if (propertyId) {
-    router.push(`/store/${slug}/properties/${propertyId}`);
-    isOpen.value = false;
-  }
+  window.open(href, '_blank', 'noopener,noreferrer');
 };
 </script>
 
@@ -544,15 +574,15 @@ const openProperty = (property: BackendPropertyContext) => {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.75rem 1.25rem;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.25);
+  padding: 0.78rem 1.08rem;
+  border-radius: 0.95rem;
+  border: 1px solid rgba(255, 255, 255, 0.32);
   background:
-    radial-gradient(circle at 18% 18%, rgba(255, 255, 255, 0.28), transparent 50%),
-    linear-gradient(135deg, var(--primary-color, #2563eb), var(--secondary-color, #0ea5e9));
+    linear-gradient(135deg, rgba(255, 255, 255, 0.18), transparent 38%),
+    linear-gradient(135deg, var(--primary-color, #0f766e), #123555 55%, var(--secondary-color, #c8a95a) 145%);
   color: #fff;
-  font-weight: 600;
-  box-shadow: 0 14px 40px rgba(37, 99, 235, 0.32);
+  font-weight: 800;
+  box-shadow: 0 18px 46px rgba(10, 31, 50, 0.3);
   backdrop-filter: blur(8px);
   cursor: pointer;
   transition:
@@ -563,7 +593,7 @@ const openProperty = (property: BackendPropertyContext) => {
 
 .ai-chat-toggle:hover {
   transform: translateY(-2px);
-  box-shadow: 0 20px 42px rgba(37, 99, 235, 0.38);
+  box-shadow: 0 22px 48px rgba(10, 31, 50, 0.3);
 }
 
 .toggle-icon {
@@ -581,15 +611,15 @@ const openProperty = (property: BackendPropertyContext) => {
 
 .ai-chat-panel {
   margin-top: 1rem;
-  width: min(420px, calc(100vw - 2rem));
-  height: min(680px, calc(100dvh - 5rem));
+  width: min(440px, calc(100vw - 2rem));
+  height: min(700px, calc(100dvh - 5rem));
   max-height: calc(100dvh - 5rem);
   background: #ffffff;
-  border-radius: 1.25rem;
-  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 1rem;
+  border: 1px solid rgba(20, 36, 51, 0.12);
   box-shadow:
-    0 24px 60px rgba(15, 23, 42, 0.18),
-    0 8px 18px rgba(15, 23, 42, 0.08);
+    0 28px 70px rgba(10, 31, 50, 0.2),
+    0 8px 18px rgba(10, 31, 50, 0.08);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -598,8 +628,8 @@ const openProperty = (property: BackendPropertyContext) => {
 .chat-header {
   padding: 0.95rem 1rem;
   background:
-    radial-gradient(circle at 0% 0%, rgba(255, 255, 255, 0.18), transparent 50%),
-    linear-gradient(135deg, var(--primary-color, #2563eb), var(--secondary-color, #06b6d4));
+    linear-gradient(135deg, rgba(255, 255, 255, 0.12), transparent 42%),
+    linear-gradient(135deg, var(--primary-color, #0f766e), #123555 58%, var(--secondary-color, #c8a95a) 145%);
   color: #ffffff;
   display: flex;
   justify-content: space-between;
@@ -620,7 +650,7 @@ const openProperty = (property: BackendPropertyContext) => {
   justify-content: center;
   width: 2.75rem;
   height: 2.75rem;
-  border-radius: 50%;
+  border-radius: 0.75rem;
   background-color: rgba(255, 255, 255, 0.2);
   color: #ffffff;
 }
@@ -653,7 +683,7 @@ const openProperty = (property: BackendPropertyContext) => {
 .close-btn {
   width: 2rem;
   height: 2rem;
-  border-radius: 999px;
+  border-radius: 0.6rem;
   border: 1px solid rgba(255, 255, 255, 0.35);
   background: rgba(255, 255, 255, 0.12);
   color: inherit;
@@ -681,7 +711,7 @@ const openProperty = (property: BackendPropertyContext) => {
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(180deg, rgba(241, 245, 249, 0.65), rgba(255, 255, 255, 0.95) 14rem), #ffffff;
+  background: linear-gradient(180deg, rgba(245, 247, 251, 0.95), rgba(255, 255, 255, 0.98) 14rem), #ffffff;
 }
 
 .chat-body {
@@ -708,7 +738,7 @@ const openProperty = (property: BackendPropertyContext) => {
 .message-bubble {
   max-width: 88%;
   padding: 0.75rem 0.95rem;
-  border-radius: 1rem;
+  border-radius: 0.8rem;
   border: 1px solid rgba(148, 163, 184, 0.26);
   font-size: 0.95rem;
   line-height: 1.5;
@@ -728,7 +758,7 @@ const openProperty = (property: BackendPropertyContext) => {
 
 .chat-message.user .message-bubble {
   border-color: transparent;
-  background: linear-gradient(135deg, var(--primary-color, #2563eb), var(--secondary-color, #0ea5e9));
+  background: linear-gradient(135deg, var(--primary-color, #0f766e), var(--secondary-color, #c8a95a));
   color: #ffffff;
   box-shadow: 0 10px 20px rgba(37, 99, 235, 0.2);
 }
@@ -773,11 +803,9 @@ const openProperty = (property: BackendPropertyContext) => {
   margin: 0.25rem 0.95rem 0.85rem;
   padding: 0.95rem;
   border: 1px solid rgba(148, 163, 184, 0.22);
-  border-radius: 0.95rem;
-  background: rgba(248, 250, 252, 0.92);
-  max-height: min(30vh, 19rem);
-  min-height: 8.5rem;
-  overflow-y: auto;
+  border-radius: 0.8rem;
+  background: rgba(247, 244, 237, 0.72);
+  overflow: hidden;
 }
 
 .chat-context h3 {
@@ -787,20 +815,29 @@ const openProperty = (property: BackendPropertyContext) => {
   color: #0f172a;
 }
 
-.chat-context ul {
+.context-carousel {
   margin: 0;
   padding: 0;
   list-style: none;
   display: flex;
-  flex-direction: column;
   gap: 0.75rem;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  padding-bottom: 0.35rem;
 }
 
-.chat-context ul > li {
+.context-card {
+  flex: 0 0 min(18rem, 82%);
+  min-height: 10.75rem;
   padding: 0.75rem;
-  border-radius: 0.85rem;
+  border-radius: 0.7rem;
   border: 1px solid rgba(148, 163, 184, 0.22);
   background: rgba(255, 255, 255, 0.95);
+  scroll-snap-align: start;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
 }
 
 .context-link {
@@ -811,20 +848,46 @@ const openProperty = (property: BackendPropertyContext) => {
   text-align: left;
   padding: 0;
   font-size: 1rem;
-  color: var(--primary-color, #3182ce);
+  color: var(--primary-color, #0f766e);
   cursor: pointer;
   line-height: 1.3;
+  min-height: 4.65rem;
+}
+
+.context-link:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.context-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
 }
 
 .context-link strong {
-  color: #1d4ed8;
+  color: var(--primary-color, #0f766e);
   font-size: 0.98rem;
+  overflow-wrap: anywhere;
+}
+
+.context-open-indicator {
+  flex: 0 0 auto;
+  color: #64748b;
+  font-size: 0.85rem;
 }
 
 .context-location {
   margin-top: 0.2rem;
   font-size: 0.86rem;
   color: #64748b;
+}
+
+.context-developer {
+  margin-top: 0.2rem;
+  font-size: 0.84rem;
+  color: #334155;
 }
 
 .context-info {
@@ -835,16 +898,15 @@ const openProperty = (property: BackendPropertyContext) => {
   line-height: 1.35;
 }
 
-.context-points {
-  margin: 0.45rem 0 0;
-  padding-left: 1.05rem;
+.context-point {
+  margin: 0.25rem 0 0;
   color: #475569;
   font-size: 0.85rem;
   line-height: 1.45;
-}
-
-.context-points li + li {
-  margin-top: 0.2rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .chat-form {
@@ -859,7 +921,7 @@ const openProperty = (property: BackendPropertyContext) => {
 .chat-input {
   width: 100%;
   border: 1px solid rgba(148, 163, 184, 0.6);
-  border-radius: 0.75rem;
+  border-radius: 0.65rem;
   padding: 0.75rem 1rem;
   font-size: 0.95rem;
   line-height: 1.45;
@@ -874,14 +936,14 @@ const openProperty = (property: BackendPropertyContext) => {
 }
 
 .chat-input:focus {
-  border-color: var(--primary-color, #3182ce);
-  box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.15);
+  border-color: var(--primary-color, #0f766e);
+  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.13);
 }
 
 .ghost-btn,
 .contact-btn,
 .contact-submit {
-  border-radius: 999px;
+  border-radius: 0.65rem;
   font-weight: 600;
   padding: 0.5rem 1.2rem;
   white-space: nowrap;
@@ -911,7 +973,7 @@ const openProperty = (property: BackendPropertyContext) => {
 
 .contact-btn {
   background: #ffffff;
-  color: var(--primary-color, #3182ce);
+  color: #123555;
   box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
 }
 
@@ -941,7 +1003,7 @@ const openProperty = (property: BackendPropertyContext) => {
 }
 
 .suggestion-chip {
-  border-radius: 999px;
+  border-radius: 0.65rem;
   border: 1px solid rgba(148, 163, 184, 0.6);
   padding: 0.35rem 0.9rem;
   background: #ffffff;
@@ -956,16 +1018,16 @@ const openProperty = (property: BackendPropertyContext) => {
 
 .suggestion-chip:hover {
   transform: translateY(-1px);
-  border-color: var(--primary-color, #3182ce);
-  box-shadow: 0 6px 16px rgba(49, 130, 206, 0.15);
+  border-color: var(--primary-color, #0f766e);
+  box-shadow: 0 6px 16px rgba(15, 118, 110, 0.13);
 }
 
 .chat-lead-card {
   margin: 0 0.95rem 0.85rem;
   padding: 1rem;
   border: 1px solid rgba(148, 163, 184, 0.3);
-  border-radius: 1rem;
-  background: rgba(248, 250, 252, 0.95);
+  border-radius: 0.8rem;
+  background: rgba(245, 247, 251, 0.95);
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
@@ -998,7 +1060,7 @@ const openProperty = (property: BackendPropertyContext) => {
 
 .lead-form input,
 .lead-form textarea {
-  border-radius: 0.75rem;
+  border-radius: 0.65rem;
   border: 1px solid rgba(148, 163, 184, 0.6);
   padding: 0.6rem 0.75rem;
   font-size: 0.9rem;
@@ -1010,8 +1072,8 @@ const openProperty = (property: BackendPropertyContext) => {
 .lead-form input:focus,
 .lead-form textarea:focus {
   outline: none;
-  border-color: var(--primary-color, #3182ce);
-  box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.15);
+  border-color: var(--primary-color, #0f766e);
+  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.13);
 }
 
 .lead-hint {
@@ -1029,7 +1091,7 @@ const openProperty = (property: BackendPropertyContext) => {
 }
 
 .contact-submit {
-  background: var(--primary-color, #3182ce);
+  background: var(--primary-color, #0f766e);
   color: #ffffff;
   border: none;
 }
@@ -1041,7 +1103,7 @@ const openProperty = (property: BackendPropertyContext) => {
 
 .contact-submit:not(:disabled):hover {
   transform: translateY(-1px);
-  background: var(--primary-color-dark, #2c5aa0);
+  background: var(--primary-color-dark, #0a5f58);
 }
 
 .chat-actions {
@@ -1060,13 +1122,13 @@ const openProperty = (property: BackendPropertyContext) => {
 
 .send-btn {
   border: none;
-  border-radius: 999px;
+  border-radius: 0.65rem;
   padding: 0.55rem 1.4rem;
   font-weight: 600;
-  background: linear-gradient(135deg, var(--primary-color, #2563eb), var(--secondary-color, #0ea5e9));
+  background: linear-gradient(135deg, var(--primary-color, #0f766e), var(--secondary-color, #c8a95a));
   color: #fff;
   cursor: pointer;
-  box-shadow: 0 10px 18px rgba(37, 99, 235, 0.2);
+  box-shadow: 0 10px 18px rgba(15, 118, 110, 0.16);
   transition:
     background 0.2s ease,
     transform 0.2s ease;
@@ -1079,7 +1141,7 @@ const openProperty = (property: BackendPropertyContext) => {
 
 .send-btn:not(:disabled):hover {
   transform: translateY(-1px);
-  background: linear-gradient(135deg, var(--primary-color-dark, #1d4ed8), var(--secondary-color, #0284c7));
+  background: linear-gradient(135deg, var(--primary-color-dark, #0a5f58), var(--secondary-color, #b3913f));
 }
 
 .ai-chat-toggle:focus-visible,
@@ -1090,23 +1152,24 @@ const openProperty = (property: BackendPropertyContext) => {
 .close-btn:focus-visible,
 .suggestion-chip:focus-visible,
 .context-link:focus-visible {
-  outline: 2px solid rgba(37, 99, 235, 0.35);
+  outline: 2px solid rgba(15, 118, 110, 0.35);
   outline-offset: 2px;
 }
 
 .chat-scroll-region::-webkit-scrollbar,
-.chat-context::-webkit-scrollbar {
+.context-carousel::-webkit-scrollbar {
   width: 8px;
+  height: 8px;
 }
 
 .chat-scroll-region::-webkit-scrollbar-thumb,
-.chat-context::-webkit-scrollbar-thumb {
+.context-carousel::-webkit-scrollbar-thumb {
   background: rgba(148, 163, 184, 0.5);
   border-radius: 999px;
 }
 
 .chat-scroll-region::-webkit-scrollbar-track,
-.chat-context::-webkit-scrollbar-track {
+.context-carousel::-webkit-scrollbar-track {
   background: transparent;
 }
 
@@ -1186,12 +1249,11 @@ const openProperty = (property: BackendPropertyContext) => {
   }
 
   .chat-context {
-    max-height: min(28vh, 16rem);
-    min-height: 7.5rem;
     padding: 0.85rem;
   }
 
-  .chat-context ul > li {
+  .context-card {
+    flex-basis: 86%;
     padding: 0.65rem;
   }
 }
